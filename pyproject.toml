@@ -1,0 +1,58 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "django-unfold-modal"
+version = "0.1.0"
+description = "Modal-based related-object popups for django-unfold"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.10"
+dependencies = [
+    "django>=5.0",
+    "django-unfold>=0.52.0",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=8.0",
+    "pytest-django>=4.5",
+    "pytest-playwright>=0.4",
+]
+dev = [
+    "ruff>=0.4",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["django_unfold_modal"]
+
+[tool.pytest.ini_options]
+addopts = """\
+    --strict-config
+    --strict-markers
+    --ds=testapp.settings
+    """
+testpaths = ["tests"]
+pythonpath = ["tests/server"]
+django_find_project = false
+
+[tool.ruff]
+fix = true
+line-length = 88
+
+[tool.ruff.lint]
+select = [
+    "E",  # pycodestyle errors
+    "W",  # pycodestyle warnings
+    "F",  # pyflakes
+    "I",  # isort
+    "C",  # flake8-comprehensions
+    "B",  # flake8-bugbear
+    "UP", # pyupgrade
+]
+ignore = [
+    "E501", # line too long
+    "B905", # zip() without strict=True
+    "C901", # too complex
+]
