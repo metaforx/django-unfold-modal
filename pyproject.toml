@@ -3,6 +3,7 @@
 name = "django-unfold-modal"
 version = "0.1.0"
 description = "Modal-based related-object popups for django-unfold"
+package-mode = false
 
 [tool.poetry.dependencies]
 python = ">=3.10"
