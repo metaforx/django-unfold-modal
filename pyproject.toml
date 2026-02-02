@@ -51,6 +51,7 @@ django-unfold = ">=0.52.0"
 pytest = ">=8.0"
 pytest-django = ">=4.5"
 pytest-playwright = ">=0.4"
+pytest-env = "^1.2.0"
 
 [tool.poetry.group.dev.dependencies]
 ruff = ">=0.4"
@@ -64,6 +65,9 @@ addopts = """\
 testpaths = ["tests"]
 pythonpath = ["tests/server"]
 django_find_project = false
+env = [
+    "DJANGO_ALLOW_ASYNC_UNSAFE=true",
+]
 
 [tool.ruff]
 fix = true

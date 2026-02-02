@@ -47,6 +47,10 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
+# Allow admin pages to be displayed in iframes (for modal functionality)
+# SAMEORIGIN allows the same site to embed the page in an iframe
+X_FRAME_OPTIONS = "SAMEORIGIN"
+
 ROOT_URLCONF = "testapp.urls"
 
 TEMPLATES = [
