@@ -2,11 +2,14 @@
  * Django Unfold Modal - Related Object Modal
  *
  * Replaces Django admin popup windows with Unfold-styled modals using iframes.
- * Overrides Django's showRelatedObjectPopup and showRelatedObjectLookupPopup functions.
+ * Listens for django:show-related and django:lookup-related events and prevents
+ * the default popup behavior.
  */
 'use strict';
 
 (function() {
+    const $ = django.jQuery;
+
     // Track popup index for nested popups (matches Django's scheme)
     let popupIndex = 0;
 
@@ -312,10 +315,13 @@
     }
 
     /**
-     * Override Django's showRelatedObjectPopup to use modal
+     * Handle django:show-related event (add/change/view/delete)
      */
-    function showRelatedObjectPopup(triggeringLink) {
-        const href = new URL(triggeringLink.href);
+    function handleShowRelated(event) {
+        event.preventDefault();
+
+        const link = event.currentTarget;
+        const href = new URL(link.href);
 
         // Ensure _popup parameter is set
         if (!href.searchParams.has('_popup')) {
@@ -323,17 +329,19 @@
         }
 
         // Generate iframe name matching Django's scheme
-        const name = addPopupIndex(triggeringLink.id.replace(/^(change|add|delete|view)_/, ''));
+        const name = addPopupIndex(link.id.replace(/^(change|add|delete|view)_/, ''));
 
         openModal(href.toString(), name);
-        return false;
     }
 
     /**
-     * Override Django's showRelatedObjectLookupPopup to use modal
+     * Handle django:lookup-related event (raw_id_fields)
      */
-    function showRelatedObjectLookupPopup(triggeringLink) {
-        const href = new URL(triggeringLink.href);
+    function handleLookupRelated(event) {
+        event.preventDefault();
+
+        const link = event.currentTarget;
+        const href = new URL(link.href);
 
         // Ensure _popup parameter is set
         if (!href.searchParams.has('_popup')) {
@@ -341,10 +349,9 @@
         }
 
         // Generate iframe name matching Django's scheme
-        const name = addPopupIndex(triggeringLink.id.replace(/^lookup_/, ''));
+        const name = addPopupIndex(link.id.replace(/^lookup_/, ''));
 
         openModal(href.toString(), name);
-        return false;
     }
 
     /**
@@ -353,19 +360,16 @@
     function init() {
         setPopupIndex();
 
-        // Override Django's popup functions
-        window.showRelatedObjectPopup = showRelatedObjectPopup;
-        window.showRelatedObjectLookupPopup = showRelatedObjectLookupPopup;
-
-        // Keep backward compatibility alias
-        window.showAddAnotherPopup = showRelatedObjectPopup;
+        // Listen for Django's related object events and prevent default popup
+        $('body').on('django:show-related', '.related-widget-wrapper-link[data-popup="yes"]', handleShowRelated);
+        $('body').on('django:lookup-related', '.related-lookup', handleLookupRelated);
 
         // Listen for postMessage from iframe
         window.addEventListener('message', handlePopupMessage);
     }
 
     // Initialize when DOM is ready
-    window.addEventListener('load', init);
+    $(document).ready(init);
 
     // Expose for testing/debugging
     window.unfoldModal = {
