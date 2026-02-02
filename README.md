@@ -22,10 +22,24 @@ Add to your `INSTALLED_APPS` after `unfold`:
 INSTALLED_APPS = [
     "unfold",
     "unfold.contrib.filters",
-    "django_unfold_modal",  # Add after unfold
+    "django_unfold_modal",  # Add after unfold, before django.contrib.admin
     "django.contrib.admin",
     # ...
 ]
+```
+
+Add the required scripts to your Unfold configuration in `settings.py`:
+
+```python
+from django.templatetags.static import static
+
+UNFOLD = {
+    # ... other unfold settings ...
+    "SCRIPTS": [
+        lambda request: static("django_unfold_modal/js/related_modal.js"),
+        lambda request: static("django_unfold_modal/js/popup_iframe.js"),
+    ],
+}
 ```
 
 ## Configuration
