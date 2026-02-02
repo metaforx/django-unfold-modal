@@ -16,6 +16,7 @@
     // Modal state
     let activeModal = null;
     let scrollbarWidth = 0;
+    let savedScrollStyles = null;
 
     /**
      * Calculate scrollbar width to prevent page jump when locking scroll
@@ -41,6 +42,12 @@
      * Lock body scroll without page jump
      */
     function lockScroll() {
+        // Save current scroll styles before modifying
+        savedScrollStyles = {
+            overflow: document.body.style.overflow,
+            paddingRight: document.body.style.paddingRight
+        };
+
         const hasScrollbar = document.body.scrollHeight > window.innerHeight;
         document.body.style.overflow = 'hidden';
         if (hasScrollbar) {
@@ -52,8 +59,12 @@
      * Unlock body scroll
      */
     function unlockScroll() {
-        document.body.style.overflow = '';
-        document.body.style.paddingRight = '';
+        // Restore saved scroll styles instead of just clearing them
+        if (savedScrollStyles) {
+            document.body.style.overflow = savedScrollStyles.overflow;
+            document.body.style.paddingRight = savedScrollStyles.paddingRight;
+            savedScrollStyles = null;
+        }
     }
 
     /**
@@ -236,6 +247,7 @@
         if (!activeModal) return;
 
         const { overlay, container } = activeModal;
+        const modalToClose = activeModal;
 
         // Animate out
         overlay.style.opacity = '0';
@@ -247,7 +259,10 @@
                 overlay.parentNode.removeChild(overlay);
             }
             unlockScroll();
-            activeModal = null;
+            // Only clear activeModal if it's still the same modal instance
+            if (activeModal === modalToClose) {
+                activeModal = null;
+            }
         }, 150);
 
         // Remove ESC listener
@@ -281,6 +296,9 @@
     function handlePopupMessage(event) {
         // Verify message is from our iframe
         if (!activeModal) return;
+
+        // Validate that event.source matches activeModal.iframe.contentWindow
+        if (event.source !== activeModal.iframe.contentWindow) return;
 
         const data = event.data;
         if (!data || !data.type || !data.type.startsWith('django:popup:')) return;
