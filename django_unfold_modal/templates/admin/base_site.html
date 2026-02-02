@@ -1,0 +1,11 @@
+{% extends "admin/base_site.html" %}
+{% load static unfold_modal %}
+
+{% block extrahead %}
+{{ block.super }}
+{% unfold_modal_enabled as modal_enabled %}
+{% if modal_enabled %}
+<script src="{% static 'django_unfold_modal/js/related_modal.js' %}" defer></script>
+<script src="{% static 'django_unfold_modal/js/popup_iframe.js' %}" defer></script>
+{% endif %}
+{% endblock %}
