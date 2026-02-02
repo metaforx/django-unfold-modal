@@ -258,9 +258,8 @@
             if (overlay.parentNode) {
                 overlay.parentNode.removeChild(overlay);
             }
-            unlockScroll();
-            // Only clear activeModal if it's still the same modal instance
             if (activeModal === modalToClose) {
+                unlockScroll();
                 activeModal = null;
             }
         }, 150);
