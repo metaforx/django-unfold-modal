@@ -16,5 +16,6 @@ Checklist
 - No out-of-scope packaging changes.
 
 Commands
-- poetry run pytest -q
+- poetry install --with test,dev
+- poetry shell → pytest -q
 - (optional) cd tests/server && poetry run python manage.py runserver
