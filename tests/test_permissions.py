@@ -69,7 +69,7 @@ class TestRelatedWidgetPermissions:
         assert response.status_code == 200
         content = response.content.decode()
         # Check for add related link for category (has permission)
-        assert "add_id_category" in content or "related-widget-wrapper" in content
+        assert "add_id_category" in content
 
     def test_add_link_hidden_without_permission(self, client, user_with_book_perms):
         """Add link should be hidden when user lacks add permission."""

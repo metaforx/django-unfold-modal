@@ -1,7 +1,5 @@
 """Tests for popup rendering and popup_response behavior."""
 
-import json
-
 import pytest
 
 from testapp.models import Author, Category
