@@ -2,6 +2,7 @@ from os import environ
 from pathlib import Path
 
 from django.core.management.utils import get_random_secret_key
+from django.templatetags.static import static
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -16,6 +17,7 @@ USE_TZ = True
 INSTALLED_APPS = [
     "unfold",
     "unfold.contrib.filters",
+    "django_unfold_modal",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -24,6 +26,16 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "testapp",
 ]
+
+# Django Unfold Modal settings
+UNFOLD_MODAL_ENABLED = True
+
+UNFOLD = {
+    "SCRIPTS": [
+        lambda request: static("django_unfold_modal/js/related_modal.js"),
+        lambda request: static("django_unfold_modal/js/popup_iframe.js"),
+    ],
+}
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
