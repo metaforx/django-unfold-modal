@@ -1,11 +1,12 @@
 # Task T02 - Package Scaffold (django-unfold-modal)
 
 Goal
-- Create the reusable Django app package with Hatch build config.
+- Create the reusable Django app package with Hatch build config and Poetry for dependency management.
 
 Scope
 - Add a new Python package directory: `django_unfold_modal/`.
-- Add `pyproject.toml` (Hatch) for this package.
+- Add `pyproject.toml` with `[project]` + `[build-system]` (Hatchling) for PyPI builds.
+- Keep `tool.poetry` for dependency management (dev/test).
 - Add minimal package metadata, version, and dependencies (Django, Unfold).
 - Add AppConfig with default settings and static/template discovery.
 - Add README with installation and basic usage.
@@ -25,4 +26,3 @@ Acceptance Criteria
 
 Tests to run
 - `pytest -q` (if import tests added)
-
