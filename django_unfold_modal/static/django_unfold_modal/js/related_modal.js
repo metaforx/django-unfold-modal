@@ -8,8 +8,6 @@
 'use strict';
 
 (function() {
-    const $ = django.jQuery;
-
     // Track popup index for nested popups (matches Django's scheme)
     let popupIndex = 0;
 
@@ -282,10 +280,19 @@
      * This allows us to reuse Django's existing dismiss* functions
      */
     function createFakeWindow(iframeName) {
+        // Get the iframe's current URL for the location object
+        const iframeUrl = activeModal && activeModal.iframe ?
+            activeModal.iframe.contentWindow.location.href : '';
+
         return {
             name: iframeName,
             close: closeModal,
-            closed: false
+            closed: false,
+            // Django's RelatedObjectLookups.js needs location.pathname
+            location: {
+                href: iframeUrl,
+                pathname: iframeUrl ? new URL(iframeUrl).pathname : ''
+            }
         };
     }
 
@@ -374,7 +381,7 @@
     /**
      * Initialize modal functionality
      */
-    function init() {
+    function init($) {
         setPopupIndex();
 
         // Listen for Django's related object events and prevent default popup
@@ -385,8 +392,26 @@
         window.addEventListener('message', handlePopupMessage);
     }
 
-    // Initialize when DOM is ready
-    $(document).ready(init);
+    /**
+     * Wait for django.jQuery to be available, then initialize
+     */
+    function waitForJQuery() {
+        if (typeof django !== 'undefined' && typeof django.jQuery !== 'undefined') {
+            django.jQuery(document).ready(function() {
+                init(django.jQuery);
+            });
+        } else {
+            // Poll every 50ms until django.jQuery is available
+            setTimeout(waitForJQuery, 50);
+        }
+    }
+
+    // Start waiting for jQuery
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', waitForJQuery);
+    } else {
+        waitForJQuery();
+    }
 
     // Expose for testing/debugging
     window.unfoldModal = {
