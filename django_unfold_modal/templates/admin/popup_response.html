@@ -1,0 +1,58 @@
+{% load i18n static %}<!DOCTYPE html>
+<html>
+  <head><title>{% translate 'Popup closing…' %}</title></head>
+  <body>
+    <script>
+    'use strict';
+    (function() {
+        const initData = JSON.parse('{{ popup_response_data|escapejs }}');
+
+        // If opened as traditional popup (window.opener exists), use Django's default behavior
+        if (window.opener) {
+            // Load Django's popup_response.js which handles opener.dismiss* calls
+            const script = document.createElement('script');
+            script.src = '{% static "admin/js/popup_response.js" %}';
+            script.id = 'django-admin-popup-response-constants';
+            script.dataset.popupResponse = JSON.stringify(initData);
+            document.body.appendChild(script);
+            return;
+        }
+
+        // If in iframe (modal), use postMessage to communicate with parent
+        if (window.parent && window.parent !== window) {
+            let message;
+
+            switch (initData.action) {
+                case 'change':
+                    message = {
+                        type: 'django:popup:change',
+                        objId: initData.value,
+                        newRepr: initData.obj,
+                        newId: initData.new_value
+                    };
+                    break;
+
+                case 'delete':
+                    message = {
+                        type: 'django:popup:delete',
+                        objId: initData.value
+                    };
+                    break;
+
+                default:
+                    // 'add' action
+                    message = {
+                        type: 'django:popup:add',
+                        newId: initData.value,
+                        newRepr: initData.obj
+                    };
+                    break;
+            }
+
+            // Post message to parent window (the modal container)
+            window.parent.postMessage(message, '*');
+        }
+    })();
+    </script>
+  </body>
+</html>
