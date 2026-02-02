@@ -15,8 +15,16 @@ class DjangoUnfoldModalConfig(AppConfig):
         "UNFOLD_MODAL_PRESENTATION": "modal",  # Reserved for future "drawer"
     }
 
-    def ready(self):
-        """Apply default settings if not already configured."""
-        for key, default_value in self.default_settings.items():
-            if not hasattr(settings, key):
-                setattr(settings, key, default_value)
+
+def get_setting(name):
+    """
+    Get a django-unfold-modal setting with fallback to default.
+
+    Args:
+        name: The setting name (e.g., "UNFOLD_MODAL_ENABLED")
+
+    Returns:
+        The setting value from Django settings, or the default value if not set.
+    """
+    default_value = DjangoUnfoldModalConfig.default_settings.get(name)
+    return getattr(settings, name, default_value)
