@@ -1,4 +1,4 @@
-# Task T10 - Playwright Tests for Nested Modals
+# Task T11 - Playwright Tests for Nested Modals
 
 Goal
 - Verify nested modal behavior and scrolling using Playwright.
@@ -11,7 +11,8 @@ Scope
 - Add UI tests that:
   - Open modal A (related widget).
   - From within modal A, open modal B.
-  - Save B and ensure A remains open and updates.
+  - Verify modal A is hidden/replaced when modal B opens (single active modal).
+  - Save/close B and ensure A is restored and updates.
   - Save A and verify parent form updates.
   - Validate iframe scrolling (content taller than container).
 
@@ -22,7 +23,8 @@ Deliverables
 - Playwright tests covering nested modal flow and scrolling.
 
 Acceptance Criteria
-- Nested modal flow works end-to-end without breaking parent modal.
+- Nested modal flow works end-to-end with replace/restore behavior.
+- Only one modal is visible at a time; previous modal is restored after closing nested modal.
 - Scroll behavior is confirmed in iframe (e.g., scrollHeight > clientHeight).
 
 Tests to run
