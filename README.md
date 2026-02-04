@@ -31,13 +31,12 @@ INSTALLED_APPS = [
 Add the required scripts to your Unfold configuration in `settings.py`:
 
 ```python
-from django.templatetags.static import static
+from django_unfold_modal.utils import get_modal_scripts
 
 UNFOLD = {
     # ... other unfold settings ...
     "SCRIPTS": [
-        lambda request: static("django_unfold_modal/js/related_modal.js"),
-        lambda request: static("django_unfold_modal/js/popup_iframe.js"),
+        *get_modal_scripts(),
     ],
 }
 ```
