@@ -2,7 +2,19 @@ from django.contrib import admin
 
 from unfold.admin import ModelAdmin, TabularInline
 
-from .models import Author, Book, Category, Chapter, Profile, Publisher, Tag
+from .models import (
+    Author,
+    Book,
+    Category,
+    Chapter,
+    City,
+    Country,
+    Event,
+    Profile,
+    Publisher,
+    Tag,
+    Venue,
+)
 
 
 @admin.register(Category)
@@ -78,3 +90,88 @@ class ChapterAdmin(ModelAdmin):
     list_display = ["book", "number", "title", "editor"]
     list_filter = ["book"]
     autocomplete_fields = ["book", "editor"]
+
+
+@admin.register(Country)
+class CountryAdmin(ModelAdmin):
+    """
+    Level C admin for nested modal testing.
+    Needs search_fields for potential autocomplete usage.
+    """
+
+    list_display = ["name"]
+    search_fields = ["name"]
+
+
+@admin.register(City)
+class CityAdmin(ModelAdmin):
+    """
+    Level B admin for nested modal testing.
+    FK to Country uses normal select (has add link to trigger modal).
+    """
+
+    list_display = ["name", "country"]
+    search_fields = ["name"]
+    list_filter = ["country"]
+    # country is normal FK select (not autocomplete) to expose add/change links
+
+
+@admin.register(Venue)
+class VenueAdmin(ModelAdmin):
+    """
+    Level A admin for nested modal testing.
+    FK to City uses normal select (has add link).
+    Creating Venue -> modal for City -> nested modal for Country.
+    """
+
+    list_display = ["name", "city", "address"]
+    search_fields = ["name", "address"]
+    list_filter = ["city__country"]
+    # city is normal FK select (not autocomplete) to expose add/change links
+
+
+@admin.register(Event)
+class EventAdmin(ModelAdmin):
+    """
+    Long-form admin to exercise iframe scrolling.
+    Many fields organized in fieldsets.
+    """
+
+    list_display = ["title", "date", "start_time", "venue", "organizer", "is_public"]
+    list_filter = ["is_public", "category", "date"]
+    search_fields = ["title", "description"]
+    autocomplete_fields = ["organizer"]
+
+    fieldsets = [
+        (
+            "Basic Information",
+            {
+                "fields": ["title", "description", "category"]
+            },
+        ),
+        (
+            "Schedule",
+            {
+                "fields": ["date", "start_time", "end_time"]
+            },
+        ),
+        (
+            "Location & Organization",
+            {
+                "fields": ["venue", "organizer"]
+            },
+        ),
+        (
+            "Details",
+            {
+                "fields": ["capacity", "price", "is_public", "website"]
+            },
+        ),
+        (
+            "Additional Notes",
+            {
+                "fields": ["notes"],
+                "classes": ["collapse"],
+            },
+        ),
+    ]
