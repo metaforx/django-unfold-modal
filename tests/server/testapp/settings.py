@@ -2,7 +2,7 @@ from os import environ
 from pathlib import Path
 
 from django.core.management.utils import get_random_secret_key
-from django.templatetags.static import static
+from django_unfold_modal.utils import get_modal_scripts
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -32,8 +32,7 @@ UNFOLD_MODAL_ENABLED = True
 
 UNFOLD = {
     "SCRIPTS": [
-        lambda request: static("django_unfold_modal/js/related_modal.js"),
-        lambda request: static("django_unfold_modal/js/popup_iframe.js"),
+        *get_modal_scripts(),
     ],
 }
 
