@@ -1,4 +1,4 @@
-# Task T11 - Modal Resize Options
+# Task T12 - Modal Resize Options
 
 Goal
 - Support preset sizes and manual resize for the modal without adding new JS libraries.

@@ -1,4 +1,4 @@
-# Task T12 - Drawer Presentation Mode
+# Task T13 - Drawer Presentation Mode
 
 Goal
 - Add opt-in drawer presentation using existing JS/CSS only.
