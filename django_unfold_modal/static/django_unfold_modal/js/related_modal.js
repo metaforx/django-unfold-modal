@@ -4,6 +4,9 @@
  * Replaces Django admin popup windows with Unfold-styled modals using iframes.
  * Listens for django:show-related and django:lookup-related events and prevents
  * the default popup behavior.
+ *
+ * Supports nested modals via a replacement stack: opening a nested modal hides
+ * the current one; closing/saving restores it.
  */
 'use strict';
 
@@ -11,10 +14,24 @@
     // Track popup index for nested popups (matches Django's scheme)
     let popupIndex = 0;
 
-    // Modal state
-    let activeModal = null;
+    // Modal stack – last element is the active (visible) modal
+    let modalStack = [];
+
+    // Guard to prevent double-close during animation
+    let isClosing = false;
+
     let scrollbarWidth = 0;
     let savedScrollStyles = null;
+
+    // Detect whether this script is running inside a modal iframe
+    const isInIframe = (window.parent !== window) && !window.opener;
+
+    /**
+     * Return the active (topmost) modal, or null.
+     */
+    function getActiveModal() {
+        return modalStack.length > 0 ? modalStack[modalStack.length - 1] : null;
+    }
 
     /**
      * Calculate scrollbar width to prevent page jump when locking scroll
@@ -37,10 +54,12 @@
     }
 
     /**
-     * Lock body scroll without page jump
+     * Lock body scroll without page jump.
+     * Only saves styles on the first call (outermost modal).
      */
     function lockScroll() {
-        // Save current scroll styles before modifying
+        if (savedScrollStyles !== null) return; // already locked
+
         savedScrollStyles = {
             overflow: document.body.style.overflow,
             paddingRight: document.body.style.paddingRight
@@ -54,10 +73,9 @@
     }
 
     /**
-     * Unlock body scroll
+     * Unlock body scroll (only when no modals remain).
      */
     function unlockScroll() {
-        // Restore saved scroll styles instead of just clearing them
         if (savedScrollStyles) {
             document.body.style.overflow = savedScrollStyles.overflow;
             document.body.style.paddingRight = savedScrollStyles.paddingRight;
@@ -191,12 +209,18 @@
     }
 
     /**
-     * Open modal with iframe
+     * Open modal with iframe.
+     * If a modal is already visible it is hidden and pushed down the stack.
      */
     function openModal(url, iframeName) {
-        // Close any existing modal
-        if (activeModal) {
-            closeModal();
+        const currentModal = getActiveModal();
+
+        // Hide current modal (don't remove) so it can be restored later
+        if (currentModal) {
+            currentModal.overlay.style.display = 'none';
+        } else {
+            // First modal – lock page scroll
+            lockScroll();
         }
 
         // Create modal structure
@@ -210,16 +234,14 @@
         overlay.appendChild(container);
         document.body.appendChild(overlay);
 
-        // Lock scroll
-        lockScroll();
-
-        // Store reference
-        activeModal = {
+        // Push onto stack
+        const modal = {
             overlay: overlay,
             container: container,
             iframe: iframe,
             iframeName: iframeName
         };
+        modalStack.push(modal);
 
         // Animate in
         requestAnimationFrame(function() {
@@ -234,40 +256,50 @@
             }
         });
 
-        // Close on ESC
-        document.addEventListener('keydown', handleEscKey);
+        // ESC handler – attach once for the first modal
+        if (modalStack.length === 1) {
+            document.addEventListener('keydown', handleEscKey);
+        }
     }
 
     /**
-     * Close modal
+     * Close the active (topmost) modal.
+     * If the stack has more modals beneath it, the previous one is restored.
      */
     function closeModal() {
-        if (!activeModal) return;
+        if (modalStack.length === 0 || isClosing) return;
 
-        const { overlay, container } = activeModal;
-        const modalToClose = activeModal;
+        isClosing = true;
+
+        const modalToClose = modalStack.pop();
+        const { overlay, container } = modalToClose;
 
         // Animate out
         overlay.style.opacity = '0';
         container.style.transform = 'scale(0.95)';
 
-        // Remove after animation
+        // Remove from DOM after animation, then restore previous if any
         setTimeout(function() {
             if (overlay.parentNode) {
                 overlay.parentNode.removeChild(overlay);
             }
-            if (activeModal === modalToClose) {
-                unlockScroll();
-                activeModal = null;
-            }
-        }, 150);
 
-        // Remove ESC listener
-        document.removeEventListener('keydown', handleEscKey);
+            const previousModal = getActiveModal();
+            if (previousModal) {
+                // Restore previous modal
+                previousModal.overlay.style.display = 'flex';
+            } else {
+                // Stack empty – unlock scroll and detach ESC handler
+                unlockScroll();
+                document.removeEventListener('keydown', handleEscKey);
+            }
+
+            isClosing = false;
+        }, 150);
     }
 
     /**
-     * Handle ESC key
+     * Handle ESC key – always closes the topmost modal
      */
     function handleEscKey(e) {
         if (e.key === 'Escape' || e.keyCode === 27) {
@@ -276,19 +308,20 @@
     }
 
     /**
-     * Create a fake window object for Django's dismiss functions
-     * This allows us to reuse Django's existing dismiss* functions
+     * Create a fake window object for Django's dismiss functions.
      */
-    function createFakeWindow(iframeName) {
-        // Get the iframe's current URL for the location object
-        const iframeUrl = activeModal && activeModal.iframe ?
-            activeModal.iframe.contentWindow.location.href : '';
+    function createFakeWindow(modal) {
+        let iframeUrl = '';
+        try {
+            iframeUrl = modal.iframe.contentWindow.location.href;
+        } catch (e) {
+            // cross-origin or detached – ignore
+        }
 
         return {
-            name: iframeName,
+            name: modal.iframeName,
             close: closeModal,
             closed: false,
-            // Django's RelatedObjectLookups.js needs location.pathname
             location: {
                 href: iframeUrl,
                 pathname: iframeUrl ? new URL(iframeUrl).pathname : ''
@@ -297,20 +330,9 @@
     }
 
     /**
-     * Handle postMessage from iframe (popup_response.html)
+     * Call the appropriate Django dismiss function.
      */
-    function handlePopupMessage(event) {
-        // Verify message is from our iframe
-        if (!activeModal) return;
-
-        // Validate that event.source matches activeModal.iframe.contentWindow
-        if (event.source !== activeModal.iframe.contentWindow) return;
-
-        const data = event.data;
-        if (!data || !data.type || !data.type.startsWith('django:popup:')) return;
-
-        const fakeWin = createFakeWindow(activeModal.iframeName);
-
+    function callDismissFunction(data, fakeWin) {
         switch (data.type) {
             case 'django:popup:add':
                 if (window.dismissAddRelatedObjectPopup) {
@@ -338,6 +360,137 @@
         }
     }
 
+    // ---------------------------------------------------------------
+    // Parent-mode message handling (manages modals on the top page)
+    // ---------------------------------------------------------------
+
+    /**
+     * Unified message handler for the parent (top-level) page.
+     * Handles:
+     *   - django:popup:*   – dismiss from an iframe after save/delete
+     *   - django:modal:open – nested modal request from an iframe
+     */
+    function handleParentMessage(event) {
+        const data = event.data;
+        if (!data || !data.type) return;
+
+        // --- Nested modal request from an iframe ---
+        if (data.type === 'django:modal:open') {
+            const activeModal = getActiveModal();
+            if (!activeModal) return;
+            // Only accept from our active modal's iframe
+            if (event.source !== activeModal.iframe.contentWindow) return;
+
+            openModal(data.url, data.iframeName);
+            return;
+        }
+
+        // --- Dismiss message from an iframe (popup_response.html / popup_iframe.js) ---
+        if (!data.type.startsWith('django:popup:')) return;
+
+        const activeModal = getActiveModal();
+        if (!activeModal) return;
+        if (event.source !== activeModal.iframe.contentWindow) return;
+
+        if (modalStack.length > 1) {
+            // Nested modal completing – close it and forward dismiss to the
+            // previous modal's iframe so its widget gets updated.
+            const previousModal = modalStack[modalStack.length - 2];
+
+            closeModal();
+
+            // Forward dismiss data into the restored modal's iframe.
+            // The iframe is still loaded (was just hidden), so postMessage works.
+            try {
+                previousModal.iframe.contentWindow.postMessage({
+                    type: 'django:modal:dismiss',
+                    dismissType: data.type,
+                    data: data,
+                    iframeName: activeModal.iframeName
+                }, window.location.origin);
+            } catch (e) {
+                // cross-origin guard
+            }
+        } else {
+            // Top-level modal completing – update the parent page's widget.
+            const fakeWin = createFakeWindow(activeModal);
+            callDismissFunction(data, fakeWin);
+        }
+    }
+
+    // ---------------------------------------------------------------
+    // Iframe-mode handlers (runs inside a modal iframe)
+    // ---------------------------------------------------------------
+
+    /**
+     * Intercept django:show-related inside an iframe and delegate to parent.
+     */
+    function handleShowRelatedInIframe(event) {
+        event.preventDefault();
+
+        const link = event.currentTarget;
+        const href = new URL(link.href);
+
+        if (!href.searchParams.has('_popup')) {
+            href.searchParams.set('_popup', '1');
+        }
+
+        const name = addPopupIndex(link.id.replace(/^(change|add|delete|view)_/, ''));
+
+        window.parent.postMessage({
+            type: 'django:modal:open',
+            url: href.toString(),
+            iframeName: name
+        }, window.location.origin);
+    }
+
+    /**
+     * Intercept django:lookup-related inside an iframe and delegate to parent.
+     */
+    function handleLookupRelatedInIframe(event) {
+        event.preventDefault();
+
+        const link = event.currentTarget;
+        const href = new URL(link.href);
+
+        if (!href.searchParams.has('_popup')) {
+            href.searchParams.set('_popup', '1');
+        }
+
+        const name = addPopupIndex(link.id.replace(/^lookup_/, ''));
+
+        window.parent.postMessage({
+            type: 'django:modal:open',
+            url: href.toString(),
+            iframeName: name
+        }, window.location.origin);
+    }
+
+    /**
+     * Handle forwarded dismiss messages from the parent page.
+     * The parent sends these when a nested modal completes, so the iframe
+     * that requested the nested modal can update its own widget.
+     */
+    function handleForwardedDismiss(event) {
+        if (event.source !== window.parent) return;
+
+        const data = event.data;
+        if (!data || data.type !== 'django:modal:dismiss') return;
+
+        const fakeWin = {
+            name: data.iframeName,
+            close: function() {},
+            closed: false,
+            location: { href: '', pathname: '' }
+        };
+
+        callDismissFunction(data.data, fakeWin);
+    }
+
+    // ---------------------------------------------------------------
+    // Parent-mode event handlers (top-level page)
+    // ---------------------------------------------------------------
+
     /**
      * Handle django:show-related event (add/change/view/delete)
      */
@@ -347,12 +500,10 @@
         const link = event.currentTarget;
         const href = new URL(link.href);
 
-        // Ensure _popup parameter is set
         if (!href.searchParams.has('_popup')) {
             href.searchParams.set('_popup', '1');
         }
 
-        // Generate iframe name matching Django's scheme
         const name = addPopupIndex(link.id.replace(/^(change|add|delete|view)_/, ''));
 
         openModal(href.toString(), name);
@@ -367,16 +518,18 @@
         const link = event.currentTarget;
         const href = new URL(link.href);
 
-        // Ensure _popup parameter is set
         if (!href.searchParams.has('_popup')) {
             href.searchParams.set('_popup', '1');
         }
 
-        // Generate iframe name matching Django's scheme
         const name = addPopupIndex(link.id.replace(/^lookup_/, ''));
 
         openModal(href.toString(), name);
     }
+
+    // ---------------------------------------------------------------
+    // Initialization
+    // ---------------------------------------------------------------
 
     /**
      * Initialize modal functionality
@@ -384,12 +537,21 @@
     function init($) {
         setPopupIndex();
 
-        // Listen for Django's related object events and prevent default popup
-        $('body').on('django:show-related', '.related-widget-wrapper-link[data-popup="yes"]', handleShowRelated);
-        $('body').on('django:lookup-related', '.related-lookup', handleLookupRelated);
+        if (isInIframe) {
+            // Running inside a modal iframe – delegate to parent for nested modals
+            $('body').on('django:show-related', '.related-widget-wrapper-link[data-popup="yes"]', handleShowRelatedInIframe);
+            $('body').on('django:lookup-related', '.related-lookup', handleLookupRelatedInIframe);
 
-        // Listen for postMessage from iframe
-        window.addEventListener('message', handlePopupMessage);
+            // Listen for forwarded dismiss results from parent
+            window.addEventListener('message', handleForwardedDismiss);
+        } else {
+            // Running on the top-level page – manage the modal stack
+            $('body').on('django:show-related', '.related-widget-wrapper-link[data-popup="yes"]', handleShowRelated);
+            $('body').on('django:lookup-related', '.related-lookup', handleLookupRelated);
+
+            // Listen for messages from iframes (dismiss + nested open requests)
+            window.addEventListener('message', handleParentMessage);
+        }
     }
 
     /**
@@ -416,6 +578,7 @@
     // Expose for testing/debugging
     window.unfoldModal = {
         open: openModal,
-        close: closeModal
+        close: closeModal,
+        stackDepth: function() { return modalStack.length; }
     };
 })();
