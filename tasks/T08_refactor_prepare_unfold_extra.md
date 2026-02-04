@@ -5,6 +5,7 @@ Goal
 
 Suggested Skill
 - Use `$unfold-dev-structured` (Sonnet).
+- Review with `$unfold-codex-reviewer`.
 
 Scope
 - Centralize modal script URL construction in a single Python helper (e.g., `django_unfold_modal.utils.get_modal_scripts()`).
