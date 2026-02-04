@@ -385,6 +385,16 @@
             return;
         }
 
+        // --- Close request from an iframe (ESC pressed inside iframe) ---
+        if (data.type === 'django:modal:close') {
+            const activeModal = getActiveModal();
+            if (!activeModal) return;
+            if (event.source !== activeModal.iframe.contentWindow) return;
+
+            closeModal();
+            return;
+        }
+
         // --- Dismiss message from an iframe (popup_response.html / popup_iframe.js) ---
         if (!data.type.startsWith('django:popup:')) return;
 
@@ -558,6 +568,15 @@
 
             // Listen for forwarded dismiss results from parent
             window.addEventListener('message', handleForwardedDismiss);
+
+            // Forward ESC key to parent so modal closes even when iframe has focus
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' || e.keyCode === 27) {
+                    window.parent.postMessage({
+                        type: 'django:modal:close'
+                    }, window.location.origin);
+                }
+            });
         } else {
             // Running on the top-level page – manage the modal stack
             $('body').on('django:show-related', '.related-widget-wrapper-link[data-popup="yes"]', handleShowRelated);
