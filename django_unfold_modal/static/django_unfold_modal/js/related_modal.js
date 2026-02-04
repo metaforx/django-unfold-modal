@@ -397,6 +397,15 @@
             // previous modal's iframe so its widget gets updated.
             const previousModal = modalStack[modalStack.length - 2];
 
+            // Capture the nested modal's URL before closing (Django's dismiss
+            // functions use win.location.pathname to derive the model name).
+            let popupUrl = '';
+            try {
+                popupUrl = activeModal.iframe.contentWindow.location.href;
+            } catch (e) {
+                // cross-origin – ignore
+            }
+
             closeModal();
 
             // Forward dismiss data into the restored modal's iframe.
@@ -406,7 +415,8 @@
                     type: 'django:modal:dismiss',
                     dismissType: data.type,
                     data: data,
-                    iframeName: activeModal.iframeName
+                    iframeName: activeModal.iframeName,
+                    popupUrl: popupUrl
                 }, window.location.origin);
             } catch (e) {
                 // cross-origin guard
@@ -477,11 +487,15 @@
         const data = event.data;
         if (!data || data.type !== 'django:modal:dismiss') return;
 
+        const popupUrl = data.popupUrl || '';
         const fakeWin = {
             name: data.iframeName,
             close: function() {},
             closed: false,
-            location: { href: '', pathname: '' }
+            location: {
+                href: popupUrl,
+                pathname: popupUrl ? new URL(popupUrl).pathname : ''
+            }
         };
 
         callDismissFunction(data.data, fakeWin);
