@@ -33,6 +33,8 @@ def get_modal_scripts():
         Without this, the modal will use default dimensions.
     """
     return [
+        # Core module (state, utilities, DOM creation) - must load first
+        lambda request: static("django_unfold_modal/js/modal_core.js"),
         # Main modal script
         lambda request: static("django_unfold_modal/js/related_modal.js"),
         # Popup iframe script
@@ -64,6 +66,8 @@ def get_modal_scripts_with_config():
     return [
         # Config script (dynamic, sets window.UNFOLD_MODAL_CONFIG)
         lambda request: reverse("django_unfold_modal:config_js"),
+        # Core module (state, utilities, DOM creation) - must load first
+        lambda request: static("django_unfold_modal/js/modal_core.js"),
         # Main modal script
         lambda request: static("django_unfold_modal/js/related_modal.js"),
         # Popup iframe script

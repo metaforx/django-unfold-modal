@@ -1,364 +1,159 @@
 /**
- * Django Unfold Modal - Related Object Modal
+ * Django Unfold Modal - Main Module
  *
- * Replaces Django admin popup windows with Unfold-styled modals using iframes.
- * Listens for django:show-related and django:lookup-related events and prevents
- * the default popup behavior.
- *
- * Supports nested modals via a replacement stack: opening a nested modal hides
- * the current one; closing/saving restores it.
+ * Modal operations, event handling, and Django integration.
+ * Requires modal_core.js to be loaded first.
  */
 'use strict';
 
-(function() {
-    // Track popup index for nested popups (matches Django's scheme)
-    let popupIndex = 0;
+(function(Modal) {
+    // Get references from core module
+    const state = Modal.state;
+    const utils = Modal.utils;
+    const dom = Modal.dom;
+    const resizeEnabled = Modal.resizeEnabled;
 
-    // Modal stack – last element is the active (visible) modal
-    let modalStack = [];
-
-    // Guard to prevent double-close during animation
-    let isClosing = false;
-
-    let scrollbarWidth = 0;
-    let savedScrollStyles = null;
-
-    // Detect whether this script is running inside a modal iframe
-    const isInIframe = (window.parent !== window) && !window.opener;
-
-    // Read configuration from window.UNFOLD_MODAL_CONFIG (set by config.js)
-    const config = window.UNFOLD_MODAL_CONFIG || {};
-    const dimensions = config.dimensions || {
-        width: "90%",
-        maxWidth: "900px",
-        height: "85vh",
-        maxHeight: "700px"
-    };
-    const resizeEnabled = config.resize || false;
-
-    // Resize tracking – prevents overlay click from closing modal during resize
-    let isResizing = false;
-
-    // CSS injection flag
-    let stylesInjected = false;
+    // ---------------------------------------------------------------
+    // Resize and Maximize
+    // ---------------------------------------------------------------
 
     /**
-     * Return the active (topmost) modal, or null.
+     * Toggle maximize state for a modal.
      */
-    function getActiveModal() {
-        return modalStack.length > 0 ? modalStack[modalStack.length - 1] : null;
-    }
+    function toggleMaximize(modal) {
+        const { container, maximizeButton } = modal;
+        const bounds = utils.getMaximizeBounds();
 
-    /**
-     * Calculate scrollbar width to prevent page jump when locking scroll
-     */
-    function getScrollbarWidth() {
-        if (scrollbarWidth) return scrollbarWidth;
-
-        const outer = document.createElement('div');
-        outer.style.visibility = 'hidden';
-        outer.style.overflow = 'scroll';
-        document.body.appendChild(outer);
-
-        const inner = document.createElement('div');
-        outer.appendChild(inner);
-
-        scrollbarWidth = outer.offsetWidth - inner.offsetWidth;
-        outer.parentNode.removeChild(outer);
-
-        return scrollbarWidth;
-    }
-
-    /**
-     * Lock body scroll without page jump.
-     * Only saves styles on the first call (outermost modal).
-     */
-    function lockScroll() {
-        if (savedScrollStyles !== null) return; // already locked
-
-        savedScrollStyles = {
-            overflow: document.body.style.overflow,
-            paddingRight: document.body.style.paddingRight
-        };
-
-        const hasScrollbar = document.body.scrollHeight > window.innerHeight;
-        document.body.style.overflow = 'hidden';
-        if (hasScrollbar) {
-            document.body.style.paddingRight = getScrollbarWidth() + 'px';
-        }
-    }
-
-    /**
-     * Unlock body scroll (only when no modals remain).
-     */
-    function unlockScroll() {
-        if (savedScrollStyles) {
-            document.body.style.overflow = savedScrollStyles.overflow;
-            document.body.style.paddingRight = savedScrollStyles.paddingRight;
-            savedScrollStyles = null;
-        }
-    }
-
-    /**
-     * Get maximize bounds (viewport minus margins matching Unfold container).
-     * Returns { width, height } in pixels.
-     */
-    function getMaximizeBounds() {
-        // Use 1rem (16px) margin on each side like Unfold's container padding
-        const margin = 16;
-        return {
-            width: window.innerWidth - (margin * 2),
-            height: window.innerHeight - (margin * 2)
-        };
-    }
-
-    /**
-     * Inject CSS styles for dark mode support.
-     */
-    function injectStyles() {
-        if (stylesInjected) return;
-        stylesInjected = true;
-
-        const style = document.createElement('style');
-        style.textContent = `
-            /* Dark mode support for modal */
-            .dark .unfold-modal-container,
-            [data-theme="dark"] .unfold-modal-container {
-                background: var(--unfold-bg-color, #1f2937);
-            }
-            .dark .unfold-modal-header,
-            [data-theme="dark"] .unfold-modal-header {
-                border-bottom-color: var(--unfold-border-color, #374151);
-            }
-            .dark .unfold-modal-title,
-            [data-theme="dark"] .unfold-modal-title {
-                color: var(--unfold-text-color, #f3f4f6);
-            }
-            .dark .unfold-modal-close,
-            .dark .unfold-modal-maximize,
-            [data-theme="dark"] .unfold-modal-close,
-            [data-theme="dark"] .unfold-modal-maximize {
-                color: var(--unfold-text-color, #9ca3af);
-            }
-            .dark .unfold-modal-close:hover,
-            .dark .unfold-modal-maximize:hover,
-            [data-theme="dark"] .unfold-modal-close:hover,
-            [data-theme="dark"] .unfold-modal-maximize:hover {
-                background: var(--unfold-hover-bg, #374151) !important;
-            }
-            .dark .unfold-modal-iframe,
-            [data-theme="dark"] .unfold-modal-iframe {
-                background: var(--unfold-bg-color, #1f2937);
-            }
-        `;
-        document.head.appendChild(style);
-    }
-
-    /**
-     * Set popup index from current window name (for nested popups)
-     */
-    function setPopupIndex() {
-        if (document.getElementsByName('_popup').length > 0) {
-            const index = window.name.lastIndexOf('__') + 2;
-            popupIndex = parseInt(window.name.substring(index)) || 0;
+        if (modal.isMaximized) {
+            // Restore to pre-maximize dimensions
+            container.style.width = modal.preMaximizeDimensions.width;
+            container.style.maxWidth = modal.preMaximizeDimensions.maxWidth;
+            container.style.height = modal.preMaximizeDimensions.height;
+            container.style.maxHeight = modal.preMaximizeDimensions.maxHeight;
+            maximizeButton.title = 'Maximize';
+            maximizeButton.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                </svg>
+            `;
+            modal.isMaximized = false;
         } else {
-            popupIndex = 0;
+            // Capture current dimensions before maximizing
+            modal.preMaximizeDimensions = {
+                width: container.style.width,
+                maxWidth: container.style.maxWidth,
+                height: container.style.height,
+                maxHeight: container.style.maxHeight
+            };
+            // Maximize to bounds
+            container.style.width = bounds.width + 'px';
+            container.style.maxWidth = 'none';
+            container.style.height = bounds.height + 'px';
+            container.style.maxHeight = 'none';
+            maximizeButton.title = 'Restore';
+            maximizeButton.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="5" y="7" width="14" height="14" rx="2" ry="2"></rect>
+                    <path d="M9 3h10a2 2 0 0 1 2 2v10"></path>
+                </svg>
+            `;
+            modal.isMaximized = true;
         }
     }
 
     /**
-     * Add popup index to name (matches Django's naming scheme)
+     * Setup resize tracking to prevent overlay close during resize
+     * and enforce maximum bounds.
      */
-    function addPopupIndex(name) {
-        return name + '__' + (popupIndex + 1);
-    }
+    function setupResizeTracking(container, modal) {
+        let observer = null;
 
-    /**
-     * Create modal overlay element
-     */
-    function createModalOverlay() {
-        const overlay = document.createElement('div');
-        overlay.className = 'unfold-modal-overlay';
-        overlay.style.cssText = `
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 9999;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            transition: opacity 0.15s ease-out;
-        `;
-        return overlay;
-    }
+        // Detect resize start by watching for mousedown near the resize handle
+        container.addEventListener('mousedown', function(e) {
+            const rect = container.getBoundingClientRect();
+            const nearRight = e.clientX > rect.right - 20;
+            const nearBottom = e.clientY > rect.bottom - 20;
 
-    /**
-     * Create modal container element
-     */
-    function createModalContainer() {
-        const container = document.createElement('div');
-        container.className = 'unfold-modal-container';
-
-        // When resize is enabled AND ResizeObserver is available, don't apply
-        // max-width/max-height from preset to allow resizing up to fullscreen
-        // bounds (enforced by ResizeObserver). Fall back to preset limits in
-        // browsers without ResizeObserver support.
-        const hasResizeObserver = typeof ResizeObserver !== 'undefined';
-        const maxWidthStyle = (resizeEnabled && hasResizeObserver) ? 'none' : dimensions.maxWidth;
-        const maxHeightStyle = (resizeEnabled && hasResizeObserver) ? 'none' : dimensions.maxHeight;
-
-        container.style.cssText = `
-            background: var(--unfold-bg-color, #fff);
-            border-radius: var(--unfold-border-radius, 0.5rem);
-            width: ${dimensions.width};
-            max-width: ${maxWidthStyle};
-            height: ${dimensions.height};
-            max-height: ${maxHeightStyle};
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-            transform: scale(0.95);
-            transition: transform 0.15s ease-out;
-            ${resizeEnabled ? 'resize: both;' : ''}
-        `;
-        return container;
-    }
-
-    /**
-     * Create modal header with maximize button (left), title (center), close button (right)
-     */
-    function createModalHeader() {
-        const header = document.createElement('div');
-        header.className = 'unfold-modal-header';
-        header.style.cssText = `
-            display: flex;
-            align-items: center;
-            padding: 0.5rem;
-            border-bottom: 1px solid var(--unfold-border-color, #e5e7eb);
-            flex-shrink: 0;
-            min-height: 2.5rem;
-        `;
-
-        // Left button group (maximize button)
-        const leftButtonGroup = document.createElement('div');
-        leftButtonGroup.style.cssText = `
-            display: flex;
-            align-items: center;
-            flex-shrink: 0;
-            min-width: 2.5rem;
-        `;
-
-        // Maximize button (left side)
-        const maximizeButton = document.createElement('button');
-        maximizeButton.type = 'button';
-        maximizeButton.className = 'unfold-modal-maximize';
-        maximizeButton.title = 'Maximize';
-        maximizeButton.innerHTML = `
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-            </svg>
-        `;
-        maximizeButton.style.cssText = `
-            background: none;
-            border: none;
-            cursor: pointer;
-            padding: 0.5rem;
-            color: var(--unfold-text-color, #6b7280);
-            border-radius: 0.25rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        `;
-        maximizeButton.addEventListener('mouseenter', function() {
-            this.style.background = 'var(--unfold-hover-bg, #f3f4f6)';
-        });
-        maximizeButton.addEventListener('mouseleave', function() {
-            this.style.background = 'none';
+            if (nearRight || nearBottom) {
+                state.isResizing = true;
+            }
         });
 
-        leftButtonGroup.appendChild(maximizeButton);
+        // End resize on any mouseup
+        function handleMouseUp() {
+            if (state.isResizing) {
+                state.isResizing = false;
+            }
+        }
+        document.addEventListener('mouseup', handleMouseUp);
 
-        // Title element (centered)
-        const title = document.createElement('span');
-        title.className = 'unfold-modal-title';
-        title.style.cssText = `
-            flex: 1;
-            text-align: center;
-            font-size: 0.875rem;
-            font-weight: 500;
-            color: var(--unfold-text-color, #374151);
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            padding: 0 0.5rem;
-        `;
-        title.textContent = '';
+        // Clamp modal to viewport bounds
+        function clampToViewport() {
+            const bounds = utils.getMaximizeBounds();
 
-        // Right button group (close button)
-        const rightButtonGroup = document.createElement('div');
-        rightButtonGroup.style.cssText = `
-            display: flex;
-            align-items: center;
-            flex-shrink: 0;
-            min-width: 2.5rem;
-        `;
+            if (container.offsetWidth > bounds.width) {
+                container.style.width = bounds.width + 'px';
+            }
+            if (container.offsetHeight > bounds.height) {
+                container.style.height = bounds.height + 'px';
+            }
+        }
 
-        // Close button (right side)
-        const closeButton = document.createElement('button');
-        closeButton.type = 'button';
-        closeButton.className = 'unfold-modal-close';
-        closeButton.title = 'Close';
-        closeButton.innerHTML = `
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="18" y1="6" x2="6" y2="18"></line>
-                <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
-        `;
-        closeButton.style.cssText = `
-            background: none;
-            border: none;
-            cursor: pointer;
-            padding: 0.5rem;
-            color: var(--unfold-text-color, #6b7280);
-            border-radius: 0.25rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        `;
-        closeButton.addEventListener('click', closeModal);
-        closeButton.addEventListener('mouseenter', function() {
-            this.style.background = 'var(--unfold-hover-bg, #f3f4f6)';
-        });
-        closeButton.addEventListener('mouseleave', function() {
-            this.style.background = 'none';
-        });
+        // Handle window resize - clamp modal if viewport shrinks
+        function handleWindowResize() {
+            clampToViewport();
 
-        rightButtonGroup.appendChild(closeButton);
+            // Update maximized modal to new bounds
+            if (modal.isMaximized) {
+                const bounds = utils.getMaximizeBounds();
+                container.style.width = bounds.width + 'px';
+                container.style.height = bounds.height + 'px';
+            }
+        }
+        window.addEventListener('resize', handleWindowResize);
 
-        header.appendChild(leftButtonGroup);
-        header.appendChild(title);
-        header.appendChild(rightButtonGroup);
+        // Use ResizeObserver to enforce max bounds during user resize
+        if (typeof ResizeObserver !== 'undefined') {
+            observer = new ResizeObserver(function(entries) {
+                for (const entry of entries) {
+                    clampToViewport();
 
-        return { header, title, maximizeButton };
+                    // If resized manually and was maximized, exit maximize state
+                    if (modal.isMaximized && state.isResizing) {
+                        modal.isMaximized = false;
+                        modal.maximizeButton.title = 'Maximize';
+                        modal.maximizeButton.innerHTML = `
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                            </svg>
+                        `;
+                    }
+                }
+            });
+            observer.observe(container);
+        }
+
+        // Return cleanup function
+        return function cleanup() {
+            document.removeEventListener('mouseup', handleMouseUp);
+            window.removeEventListener('resize', handleWindowResize);
+            if (observer) {
+                observer.disconnect();
+            }
+        };
     }
 
+    // ---------------------------------------------------------------
+    // Modal Operations
+    // ---------------------------------------------------------------
+
     /**
-     * Create iframe element
+     * Handle ESC key – always closes the topmost modal
      */
-    function createIframe(url, name) {
-        const iframe = document.createElement('iframe');
-        iframe.name = name;
-        iframe.src = url;
-        iframe.className = 'unfold-modal-iframe';
-        iframe.style.cssText = `
-            flex: 1;
-            width: 100%;
-            border: none;
-            background: var(--unfold-bg-color, #fff);
-        `;
-        return iframe;
+    function handleEscKey(e) {
+        if (e.key === 'Escape' || e.keyCode === 27) {
+            closeModal();
+        }
     }
 
     /**
@@ -367,23 +162,24 @@
      */
     function openModal(url, iframeName) {
         // Inject dark mode styles on first use
-        injectStyles();
+        Modal.injectStyles();
 
-        const currentModal = getActiveModal();
+        const currentModal = utils.getActiveModal();
+        const modalStack = state.modalStack;
 
         // Hide current modal (don't remove) so it can be restored later
         if (currentModal) {
             currentModal.overlay.style.display = 'none';
         } else {
             // First modal – lock page scroll
-            lockScroll();
+            utils.lockScroll();
         }
 
         // Create modal structure
-        const overlay = createModalOverlay();
-        const container = createModalContainer();
-        const { header, title, maximizeButton } = createModalHeader();
-        const iframe = createIframe(url, iframeName);
+        const overlay = dom.createOverlay();
+        const container = dom.createContainer();
+        const { header, title, maximizeButton } = dom.createHeader(closeModal);
+        const iframe = dom.createIframe(url, iframeName);
 
         container.appendChild(header);
         container.appendChild(iframe);
@@ -399,7 +195,7 @@
             title: title,
             maximizeButton: maximizeButton,
             isMaximized: false,
-            preMaximizeDimensions: null  // Set when maximizing to preserve user's resize
+            preMaximizeDimensions: null
         };
         modalStack.push(modal);
 
@@ -420,7 +216,7 @@
             }
         });
 
-        // Resize tracking via ResizeObserver to enforce max bounds
+        // Resize tracking
         if (resizeEnabled) {
             modal.resizeCleanup = setupResizeTracking(container, modal);
         }
@@ -437,9 +233,9 @@
             mousedownOnOverlay = (e.target === overlay);
         });
 
-        // Close on overlay click only if mousedown was also on overlay (not resize drag)
+        // Close on overlay click only if mousedown was also on overlay
         overlay.addEventListener('click', function(e) {
-            if (e.target === overlay && mousedownOnOverlay && !isResizing) {
+            if (e.target === overlay && mousedownOnOverlay && !state.isResizing) {
                 closeModal();
             }
             mousedownOnOverlay = false;
@@ -452,135 +248,19 @@
     }
 
     /**
-     * Toggle maximize state for a modal.
-     */
-    function toggleMaximize(modal) {
-        const { container, maximizeButton } = modal;
-        const bounds = getMaximizeBounds();
-
-        if (modal.isMaximized) {
-            // Restore to pre-maximize dimensions
-            container.style.width = modal.preMaximizeDimensions.width;
-            container.style.maxWidth = modal.preMaximizeDimensions.maxWidth;
-            container.style.height = modal.preMaximizeDimensions.height;
-            container.style.maxHeight = modal.preMaximizeDimensions.maxHeight;
-            maximizeButton.title = 'Maximize';
-            // Restore icon to maximize (rectangle)
-            maximizeButton.innerHTML = `
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                </svg>
-            `;
-            modal.isMaximized = false;
-        } else {
-            // Capture current dimensions before maximizing (preserves user's resize)
-            modal.preMaximizeDimensions = {
-                width: container.style.width,
-                maxWidth: container.style.maxWidth,
-                height: container.style.height,
-                maxHeight: container.style.maxHeight
-            };
-            // Maximize to bounds
-            container.style.width = bounds.width + 'px';
-            container.style.maxWidth = 'none';
-            container.style.height = bounds.height + 'px';
-            container.style.maxHeight = 'none';
-            maximizeButton.title = 'Restore';
-            // Change icon to restore (overlapping rectangles)
-            maximizeButton.innerHTML = `
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="5" y="7" width="14" height="14" rx="2" ry="2"></rect>
-                    <path d="M9 3h10a2 2 0 0 1 2 2v10"></path>
-                </svg>
-            `;
-            modal.isMaximized = true;
-        }
-    }
-
-    /**
-     * Setup resize tracking to prevent overlay close during resize
-     * and enforce maximum bounds.
-     * Returns cleanup function to disconnect observer and remove listener.
-     */
-    function setupResizeTracking(container, modal) {
-        // Track resize state via mouse events on container edge
-        let resizeStartWidth = 0;
-        let resizeStartHeight = 0;
-        let observer = null;
-
-        // Detect resize start by watching for mousedown near the resize handle
-        container.addEventListener('mousedown', function(e) {
-            const rect = container.getBoundingClientRect();
-            const nearRight = e.clientX > rect.right - 20;
-            const nearBottom = e.clientY > rect.bottom - 20;
-
-            if (nearRight || nearBottom) {
-                isResizing = true;
-                resizeStartWidth = container.offsetWidth;
-                resizeStartHeight = container.offsetHeight;
-            }
-        });
-
-        // End resize on any mouseup (including over overlay)
-        function handleMouseUp() {
-            if (isResizing) {
-                isResizing = false;
-            }
-        }
-        document.addEventListener('mouseup', handleMouseUp);
-
-        // Use ResizeObserver to enforce max bounds during resize
-        if (typeof ResizeObserver !== 'undefined') {
-            observer = new ResizeObserver(function(entries) {
-                for (const entry of entries) {
-                    const bounds = getMaximizeBounds();
-                    const el = entry.target;
-
-                    // Clamp to maximize bounds
-                    if (el.offsetWidth > bounds.width) {
-                        el.style.width = bounds.width + 'px';
-                    }
-                    if (el.offsetHeight > bounds.height) {
-                        el.style.height = bounds.height + 'px';
-                    }
-
-                    // If resized manually and was maximized, exit maximize state
-                    if (modal.isMaximized && isResizing) {
-                        modal.isMaximized = false;
-                        modal.maximizeButton.title = 'Maximize';
-                        modal.maximizeButton.innerHTML = `
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                            </svg>
-                        `;
-                    }
-                }
-            });
-            observer.observe(container);
-        }
-
-        // Return cleanup function
-        return function cleanup() {
-            document.removeEventListener('mouseup', handleMouseUp);
-            if (observer) {
-                observer.disconnect();
-            }
-        };
-    }
-
-    /**
      * Close the active (topmost) modal.
      * If the stack has more modals beneath it, the previous one is restored.
-     * Stack UX: Previous modal is shown immediately to avoid flicker.
      */
     function closeModal() {
-        if (modalStack.length === 0 || isClosing) return;
+        const modalStack = state.modalStack;
 
-        isClosing = true;
+        if (modalStack.length === 0 || state.isClosing) return;
+
+        state.isClosing = true;
 
         const modalToClose = modalStack.pop();
         const { overlay, container, resizeCleanup } = modalToClose;
-        const previousModal = getActiveModal();
+        const previousModal = utils.getActiveModal();
 
         // Clean up resize tracking if present
         if (resizeCleanup) {
@@ -588,11 +268,11 @@
         }
 
         if (previousModal) {
-            // Show previous modal immediately (behind current) to avoid flicker
+            // Show previous modal immediately to avoid flicker
             previousModal.overlay.style.display = 'flex';
             previousModal.overlay.style.opacity = '1';
 
-            // Make closing modal's overlay transparent immediately to avoid double-darkening
+            // Make closing modal's overlay transparent
             overlay.style.background = 'transparent';
 
             // Only fade out the container
@@ -613,22 +293,17 @@
 
             if (!previousModal) {
                 // Stack empty – unlock scroll and detach ESC handler
-                unlockScroll();
+                utils.unlockScroll();
                 document.removeEventListener('keydown', handleEscKey);
             }
 
-            isClosing = false;
+            state.isClosing = false;
         }, 150);
     }
 
-    /**
-     * Handle ESC key – always closes the topmost modal
-     */
-    function handleEscKey(e) {
-        if (e.key === 'Escape' || e.keyCode === 27) {
-            closeModal();
-        }
-    }
+    // ---------------------------------------------------------------
+    // Django Integration
+    // ---------------------------------------------------------------
 
     /**
      * Create a fake window object for Django's dismiss functions.
@@ -638,7 +313,7 @@
         try {
             iframeUrl = modal.iframe.contentWindow.location.href;
         } catch (e) {
-            // cross-origin or detached – ignore
+            // cross-origin or detached
         }
 
         return {
@@ -662,19 +337,16 @@
                     window.dismissAddRelatedObjectPopup(fakeWin, data.newId, data.newRepr);
                 }
                 break;
-
             case 'django:popup:change':
                 if (window.dismissChangeRelatedObjectPopup) {
                     window.dismissChangeRelatedObjectPopup(fakeWin, data.objId, data.newRepr, data.newId);
                 }
                 break;
-
             case 'django:popup:delete':
                 if (window.dismissDeleteRelatedObjectPopup) {
                     window.dismissDeleteRelatedObjectPopup(fakeWin, data.objId);
                 }
                 break;
-
             case 'django:popup:lookup':
                 if (window.dismissRelatedLookupPopup) {
                     window.dismissRelatedLookupPopup(fakeWin, data.chosenId);
@@ -684,65 +356,51 @@
     }
 
     // ---------------------------------------------------------------
-    // Parent-mode message handling (manages modals on the top page)
+    // Parent-mode Message Handling
     // ---------------------------------------------------------------
 
     /**
      * Unified message handler for the parent (top-level) page.
-     * Handles:
-     *   - django:popup:*   – dismiss from an iframe after save/delete
-     *   - django:modal:open – nested modal request from an iframe
      */
     function handleParentMessage(event) {
         const data = event.data;
         if (!data || !data.type) return;
 
-        // --- Nested modal request from an iframe ---
-        if (data.type === 'django:modal:open') {
-            const activeModal = getActiveModal();
-            if (!activeModal) return;
-            // Only accept from our active modal's iframe
-            if (event.source !== activeModal.iframe.contentWindow) return;
+        const activeModal = utils.getActiveModal();
+        const modalStack = state.modalStack;
 
+        // Nested modal request from an iframe
+        if (data.type === 'django:modal:open') {
+            if (!activeModal) return;
+            if (event.source !== activeModal.iframe.contentWindow) return;
             openModal(data.url, data.iframeName);
             return;
         }
 
-        // --- Close request from an iframe (ESC pressed inside iframe) ---
+        // Close request from an iframe (ESC pressed inside iframe)
         if (data.type === 'django:modal:close') {
-            const activeModal = getActiveModal();
             if (!activeModal) return;
             if (event.source !== activeModal.iframe.contentWindow) return;
-
             closeModal();
             return;
         }
 
-        // --- Dismiss message from an iframe (popup_response.html / popup_iframe.js) ---
+        // Dismiss message from an iframe
         if (!data.type.startsWith('django:popup:')) return;
-
-        const activeModal = getActiveModal();
         if (!activeModal) return;
         if (event.source !== activeModal.iframe.contentWindow) return;
 
         if (modalStack.length > 1) {
-            // Nested modal completing – close it and forward dismiss to the
-            // previous modal's iframe so its widget gets updated.
+            // Nested modal completing
             const previousModal = modalStack[modalStack.length - 2];
-
-            // Capture the nested modal's URL before closing (Django's dismiss
-            // functions use win.location.pathname to derive the model name).
             let popupUrl = '';
             try {
                 popupUrl = activeModal.iframe.contentWindow.location.href;
-            } catch (e) {
-                // cross-origin – ignore
-            }
+            } catch (e) {}
 
             closeModal();
 
-            // Forward dismiss data into the restored modal's iframe.
-            // The iframe is still loaded (was just hidden), so postMessage works.
+            // Forward dismiss data to the restored modal's iframe
             try {
                 previousModal.iframe.contentWindow.postMessage({
                     type: 'django:modal:dismiss',
@@ -751,18 +409,16 @@
                     iframeName: activeModal.iframeName,
                     popupUrl: popupUrl
                 }, window.location.origin);
-            } catch (e) {
-                // cross-origin guard
-            }
+            } catch (e) {}
         } else {
-            // Top-level modal completing – update the parent page's widget.
+            // Top-level modal completing
             const fakeWin = createFakeWindow(activeModal);
             callDismissFunction(data, fakeWin);
         }
     }
 
     // ---------------------------------------------------------------
-    // Iframe-mode handlers (runs inside a modal iframe)
+    // Iframe-mode Handlers
     // ---------------------------------------------------------------
 
     /**
@@ -778,7 +434,7 @@
             href.searchParams.set('_popup', '1');
         }
 
-        const name = addPopupIndex(link.id.replace(/^(change|add|delete|view)_/, ''));
+        const name = utils.addPopupIndex(link.id.replace(/^(change|add|delete|view)_/, ''));
 
         window.parent.postMessage({
             type: 'django:modal:open',
@@ -800,7 +456,7 @@
             href.searchParams.set('_popup', '1');
         }
 
-        const name = addPopupIndex(link.id.replace(/^lookup_/, ''));
+        const name = utils.addPopupIndex(link.id.replace(/^lookup_/, ''));
 
         window.parent.postMessage({
             type: 'django:modal:open',
@@ -811,8 +467,6 @@
 
     /**
      * Handle forwarded dismiss messages from the parent page.
-     * The parent sends these when a nested modal completes, so the iframe
-     * that requested the nested modal can update its own widget.
      */
     function handleForwardedDismiss(event) {
         if (event.source !== window.parent) return;
@@ -835,7 +489,7 @@
     }
 
     // ---------------------------------------------------------------
-    // Parent-mode event handlers (top-level page)
+    // Parent-mode Event Handlers
     // ---------------------------------------------------------------
 
     /**
@@ -851,7 +505,7 @@
             href.searchParams.set('_popup', '1');
         }
 
-        const name = addPopupIndex(link.id.replace(/^(change|add|delete|view)_/, ''));
+        const name = utils.addPopupIndex(link.id.replace(/^(change|add|delete|view)_/, ''));
 
         openModal(href.toString(), name);
     }
@@ -869,7 +523,7 @@
             href.searchParams.set('_popup', '1');
         }
 
-        const name = addPopupIndex(link.id.replace(/^lookup_/, ''));
+        const name = utils.addPopupIndex(link.id.replace(/^lookup_/, ''));
 
         openModal(href.toString(), name);
     }
@@ -882,17 +536,16 @@
      * Initialize modal functionality
      */
     function init($) {
-        setPopupIndex();
+        utils.setPopupIndex();
 
-        if (isInIframe) {
-            // Running inside a modal iframe – delegate to parent for nested modals
+        if (state.isInIframe) {
+            // Running inside a modal iframe
             $('body').on('django:show-related', '.related-widget-wrapper-link[data-popup="yes"]', handleShowRelatedInIframe);
             $('body').on('django:lookup-related', '.related-lookup', handleLookupRelatedInIframe);
 
-            // Listen for forwarded dismiss results from parent
             window.addEventListener('message', handleForwardedDismiss);
 
-            // Forward ESC key to parent so modal closes even when iframe has focus
+            // Forward ESC key to parent
             document.addEventListener('keydown', function(e) {
                 if (e.key === 'Escape' || e.keyCode === 27) {
                     window.parent.postMessage({
@@ -901,11 +554,10 @@
                 }
             });
         } else {
-            // Running on the top-level page – manage the modal stack
+            // Running on the top-level page
             $('body').on('django:show-related', '.related-widget-wrapper-link[data-popup="yes"]', handleShowRelated);
             $('body').on('django:lookup-related', '.related-lookup', handleLookupRelated);
 
-            // Listen for messages from iframes (dismiss + nested open requests)
             window.addEventListener('message', handleParentMessage);
         }
     }
@@ -919,7 +571,6 @@
                 init(django.jQuery);
             });
         } else {
-            // Poll every 50ms until django.jQuery is available
             setTimeout(waitForJQuery, 50);
         }
     }
@@ -931,10 +582,16 @@
         waitForJQuery();
     }
 
-    // Expose for testing/debugging
+    // Expose public API
+    Modal.open = openModal;
+    Modal.close = closeModal;
+    Modal.stackDepth = function() { return state.modalStack.length; };
+
+    // Legacy compatibility
     window.unfoldModal = {
         open: openModal,
         close: closeModal,
-        stackDepth: function() { return modalStack.length; }
+        stackDepth: function() { return state.modalStack.length; }
     };
-})();
+
+})(window.UnfoldModal);
