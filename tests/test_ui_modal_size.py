@@ -9,7 +9,7 @@ class TestModalSizeConfigured:
     """Test modal size dimensions with testapp configuration (large preset + resize enabled)."""
 
     def test_large_size_initial_dimensions(self, authenticated_page, live_server):
-        """Modal should start with large preset width (testapp: UNFOLD_MODAL_SIZE='large', UNFOLD_MODAL_RESIZE=True)."""
+        """Modal should start with large preset max-width (testapp: UNFOLD_MODAL_SIZE='large', UNFOLD_MODAL_RESIZE=True)."""
         page = authenticated_page
         page.goto(f"{live_server.url}/admin/testapp/book/add/")
 
@@ -21,10 +21,11 @@ class TestModalSizeConfigured:
         container = page.locator(".unfold-modal-container")
         expect(container).to_be_visible()
 
-        # With resize enabled, max-width is 'none' but initial width comes from preset (95%)
-        # Check that the modal's inline width style is set to 95% (large preset)
+        # With resize enabled, initial width is calculated as min(percentage * viewport, maxWidth)
+        # For large preset (95% width, 1200px maxWidth), initial should be capped at 1200px
+        # on typical test viewports (1280px default) where 95% = 1216px > 1200px
         width_style = container.evaluate("el => el.style.width")
-        assert width_style == "95%", f"Expected width '95%' from large preset, got '{width_style}'"
+        assert width_style == "1200px", f"Expected initial width '1200px' (capped at large preset max), got '{width_style}'"
 
 
 @pytest.mark.django_db(transaction=True)
