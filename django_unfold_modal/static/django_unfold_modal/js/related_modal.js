@@ -26,6 +26,16 @@
     // Detect whether this script is running inside a modal iframe
     const isInIframe = (window.parent !== window) && !window.opener;
 
+    // Read configuration from window.UNFOLD_MODAL_CONFIG (set by config.js)
+    const config = window.UNFOLD_MODAL_CONFIG || {};
+    const dimensions = config.dimensions || {
+        width: "90%",
+        maxWidth: "900px",
+        height: "85vh",
+        maxHeight: "700px"
+    };
+    const resizeEnabled = config.resize || false;
+
     /**
      * Return the active (topmost) modal, or null.
      */
@@ -131,16 +141,17 @@
         container.style.cssText = `
             background: var(--unfold-bg-color, #fff);
             border-radius: var(--unfold-border-radius, 0.5rem);
-            width: 90%;
-            max-width: 900px;
-            height: 85vh;
-            max-height: 700px;
+            width: ${dimensions.width};
+            max-width: ${dimensions.maxWidth};
+            height: ${dimensions.height};
+            max-height: ${dimensions.maxHeight};
             display: flex;
             flex-direction: column;
             overflow: hidden;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
             transform: scale(0.95);
             transition: transform 0.15s ease-out;
+            ${resizeEnabled ? 'resize: both;' : ''}
         `;
         return container;
     }

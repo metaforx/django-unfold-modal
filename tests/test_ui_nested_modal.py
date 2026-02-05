@@ -172,8 +172,8 @@ class TestNestedModalStack:
         selected_text = page.locator("#id_city option:checked").text_content()
         assert "Nested City" in selected_text
 
-    def test_esc_closes_nested_only(self, authenticated_page, live_server):
-        """ESC should close only the topmost nested modal, not all."""
+    def test_close_button_closes_nested_only(self, authenticated_page, live_server):
+        """Close button should close only the topmost nested modal, not all."""
         page = authenticated_page
         page.goto(f"{live_server.url}/admin/testapp/venue/add/")
 
@@ -189,7 +189,36 @@ class TestNestedModalStack:
         page.wait_for_timeout(500)
         assert page.evaluate("window.unfoldModal.stackDepth()") == 2
 
-        # Press ESC
+        # Click close button of nested modal B
+        page.locator(".unfold-modal-close").last.click()
+        page.wait_for_timeout(300)
+
+        # Only modal B should be closed, A should be restored
+        assert page.evaluate("window.unfoldModal.stackDepth()") == 1
+        expect(page.locator(".unfold-modal-overlay").first).to_be_visible()
+
+    def test_esc_in_nested_iframe_closes_nested_modal(self, authenticated_page, live_server):
+        """ESC pressed inside nested modal iframe should close only that modal."""
+        page = authenticated_page
+        page.goto(f"{live_server.url}/admin/testapp/venue/add/")
+
+        # Open modal A
+        page.click("#add_id_city")
+        page.wait_for_selector(".unfold-modal-overlay")
+        page.wait_for_timeout(300)
+
+        # Open modal B
+        iframe_a = page.frame_locator(".unfold-modal-iframe")
+        iframe_a.locator("#add_id_country").wait_for(state="visible", timeout=5000)
+        iframe_a.locator("#add_id_country").click()
+        page.wait_for_timeout(500)
+        assert page.evaluate("window.unfoldModal.stackDepth()") == 2
+
+        # Focus on an input inside modal B's iframe, then press ESC
+        iframes = page.locator(".unfold-modal-iframe")
+        iframe_b = page.frame_locator(f".unfold-modal-iframe >> nth={iframes.count() - 1}")
+        iframe_b.locator('input[name="name"]').click()
+        page.wait_for_timeout(100)
         page.keyboard.press("Escape")
         page.wait_for_timeout(300)
 
