@@ -54,7 +54,33 @@ UNFOLD_MODAL_VARIANT = "iframe"
 
 # Presentation style: "modal" (default, v1 only)
 UNFOLD_MODAL_PRESENTATION = "modal"
+
+# Modal size preset: "default", "large", or "full"
+UNFOLD_MODAL_SIZE = "default"
+
+# Enable manual resize handle on modal (default: False)
+UNFOLD_MODAL_RESIZE = False
 ```
+
+### Size Presets
+
+To use custom size presets (`UNFOLD_MODAL_SIZE`) or enable resize (`UNFOLD_MODAL_RESIZE`),
+include the app's URLs in your `urls.py`:
+
+```python
+from django.urls import include, path
+
+urlpatterns = [
+    path("admin/", admin.site.urls),
+    path("unfold-modal/", include("django_unfold_modal.urls")),
+]
+```
+
+| Preset    | Width | Max Width | Height | Max Height |
+|-----------|-------|-----------|--------|------------|
+| `default` | 90%   | 900px     | 85vh   | 700px      |
+| `large`   | 95%   | 1200px    | 90vh   | 900px      |
+| `full`    | 98%   | none      | 95vh   | none       |
 
 ## Supported Widgets
 
