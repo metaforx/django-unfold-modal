@@ -374,3 +374,85 @@ class TestOverlayNoDoubleFlicker:
         bg = second_overlay.evaluate("el => window.getComputedStyle(el).background")
         # Should contain 'transparent' or 'rgba(0, 0, 0, 0)'
         assert "transparent" in bg or "rgba(0, 0, 0, 0)" in bg
+
+
+@pytest.mark.django_db(transaction=True)
+class TestModalHeaderLayout:
+    """Test modal header button placement (T13c)."""
+
+    def test_maximize_button_on_left(self, authenticated_page, live_server):
+        """Maximize button should be on the left side of the header."""
+        page = authenticated_page
+        page.goto(f"{live_server.url}/admin/testapp/book/add/")
+
+        page.click("#add_id_category")
+        page.wait_for_selector(".unfold-modal-overlay")
+        page.wait_for_timeout(200)
+
+        maximize_btn = page.locator(".unfold-modal-maximize")
+        close_btn = page.locator(".unfold-modal-close")
+
+        # Get bounding boxes
+        max_box = maximize_btn.bounding_box()
+        close_box = close_btn.bounding_box()
+
+        # Maximize button should be to the left of close button
+        assert max_box["x"] < close_box["x"], "Maximize button should be on the left"
+
+    def test_close_button_on_right(self, authenticated_page, live_server):
+        """Close button should be on the right side of the header."""
+        page = authenticated_page
+        page.goto(f"{live_server.url}/admin/testapp/book/add/")
+
+        page.click("#add_id_category")
+        page.wait_for_selector(".unfold-modal-overlay")
+        page.wait_for_timeout(200)
+
+        close_btn = page.locator(".unfold-modal-close")
+        header = page.locator(".unfold-modal-header")
+
+        # Get bounding boxes
+        close_box = close_btn.bounding_box()
+        header_box = header.bounding_box()
+
+        # Close button should be near the right edge of header
+        close_right_edge = close_box["x"] + close_box["width"]
+        header_right_edge = header_box["x"] + header_box["width"]
+
+        # Close button should be within 20px of header right edge
+        assert header_right_edge - close_right_edge < 20, "Close button should be on the right"
+
+
+@pytest.mark.django_db(transaction=True)
+class TestModalResizeBeyondPreset:
+    """Test resize can exceed preset size up to fullscreen bounds (T13c)."""
+
+    def test_resize_not_limited_by_preset_max_width(self, authenticated_page, live_server):
+        """With resize enabled, modal should not be limited by preset max-width."""
+        page = authenticated_page
+        page.goto(f"{live_server.url}/admin/testapp/book/add/")
+
+        page.click("#add_id_category")
+        page.wait_for_selector(".unfold-modal-overlay")
+        page.wait_for_timeout(200)
+
+        container = page.locator(".unfold-modal-container")
+
+        # When resize is enabled, max-width should be 'none'
+        max_width = container.evaluate("el => window.getComputedStyle(el).maxWidth")
+        assert max_width == "none", f"max-width should be 'none' when resize enabled, got {max_width}"
+
+    def test_resize_not_limited_by_preset_max_height(self, authenticated_page, live_server):
+        """With resize enabled, modal should not be limited by preset max-height."""
+        page = authenticated_page
+        page.goto(f"{live_server.url}/admin/testapp/book/add/")
+
+        page.click("#add_id_category")
+        page.wait_for_selector(".unfold-modal-overlay")
+        page.wait_for_timeout(200)
+
+        container = page.locator(".unfold-modal-container")
+
+        # When resize is enabled, max-height should be 'none'
+        max_height = container.evaluate("el => window.getComputedStyle(el).maxHeight")
+        assert max_height == "none", f"max-height should be 'none' when resize enabled, got {max_height}"

@@ -199,13 +199,22 @@
     function createModalContainer() {
         const container = document.createElement('div');
         container.className = 'unfold-modal-container';
+
+        // When resize is enabled AND ResizeObserver is available, don't apply
+        // max-width/max-height from preset to allow resizing up to fullscreen
+        // bounds (enforced by ResizeObserver). Fall back to preset limits in
+        // browsers without ResizeObserver support.
+        const hasResizeObserver = typeof ResizeObserver !== 'undefined';
+        const maxWidthStyle = (resizeEnabled && hasResizeObserver) ? 'none' : dimensions.maxWidth;
+        const maxHeightStyle = (resizeEnabled && hasResizeObserver) ? 'none' : dimensions.maxHeight;
+
         container.style.cssText = `
             background: var(--unfold-bg-color, #fff);
             border-radius: var(--unfold-border-radius, 0.5rem);
             width: ${dimensions.width};
-            max-width: ${dimensions.maxWidth};
+            max-width: ${maxWidthStyle};
             height: ${dimensions.height};
-            max-height: ${dimensions.maxHeight};
+            max-height: ${maxHeightStyle};
             display: flex;
             flex-direction: column;
             overflow: hidden;
@@ -218,7 +227,7 @@
     }
 
     /**
-     * Create modal header with title, maximize button, and close button
+     * Create modal header with maximize button (left), title (center), close button (right)
      */
     function createModalHeader() {
         const header = document.createElement('div');
@@ -232,39 +241,16 @@
             min-height: 2.5rem;
         `;
 
-        // Spacer for symmetry (same width as button group)
-        const leftSpacer = document.createElement('div');
-        leftSpacer.style.cssText = `
-            width: 5rem;
-            flex-shrink: 0;
-        `;
-
-        // Title element (centered)
-        const title = document.createElement('span');
-        title.className = 'unfold-modal-title';
-        title.style.cssText = `
-            flex: 1;
-            text-align: center;
-            font-size: 0.875rem;
-            font-weight: 500;
-            color: var(--unfold-text-color, #374151);
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            padding: 0 0.5rem;
-        `;
-        title.textContent = '';
-
-        // Button group (right side)
-        const buttonGroup = document.createElement('div');
-        buttonGroup.style.cssText = `
+        // Left button group (maximize button)
+        const leftButtonGroup = document.createElement('div');
+        leftButtonGroup.style.cssText = `
             display: flex;
             align-items: center;
-            gap: 0.25rem;
             flex-shrink: 0;
+            min-width: 2.5rem;
         `;
 
-        // Maximize button
+        // Maximize button (left side)
         const maximizeButton = document.createElement('button');
         maximizeButton.type = 'button';
         maximizeButton.className = 'unfold-modal-maximize';
@@ -292,7 +278,34 @@
             this.style.background = 'none';
         });
 
-        // Close button
+        leftButtonGroup.appendChild(maximizeButton);
+
+        // Title element (centered)
+        const title = document.createElement('span');
+        title.className = 'unfold-modal-title';
+        title.style.cssText = `
+            flex: 1;
+            text-align: center;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--unfold-text-color, #374151);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            padding: 0 0.5rem;
+        `;
+        title.textContent = '';
+
+        // Right button group (close button)
+        const rightButtonGroup = document.createElement('div');
+        rightButtonGroup.style.cssText = `
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
+            min-width: 2.5rem;
+        `;
+
+        // Close button (right side)
         const closeButton = document.createElement('button');
         closeButton.type = 'button';
         closeButton.className = 'unfold-modal-close';
@@ -322,12 +335,11 @@
             this.style.background = 'none';
         });
 
-        buttonGroup.appendChild(maximizeButton);
-        buttonGroup.appendChild(closeButton);
+        rightButtonGroup.appendChild(closeButton);
 
-        header.appendChild(leftSpacer);
+        header.appendChild(leftButtonGroup);
         header.appendChild(title);
-        header.appendChild(buttonGroup);
+        header.appendChild(rightButtonGroup);
 
         return { header, title, maximizeButton };
     }
