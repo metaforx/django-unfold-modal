@@ -11,6 +11,7 @@ Scope
 - Replace JS `style.cssText` usage with CSS classes.
 - Add a dedicated stylesheet (Tailwind 4) for modal components.
 - Follow Tailwind setup patterns from `unfold_extra/src/` (package.json, vite.config.ts, build pipeline).
+- Titlebar has to respect dark mode. Follow unfold dark mode implementation for consistency.
 
 Non-goals
 - No UI/behavior changes beyond CSS refactor.
