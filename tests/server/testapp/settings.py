@@ -28,7 +28,7 @@ INSTALLED_APPS = [
 ]
 
 # Django Unfold Modal settings
-UNFOLD_MODAL_ENABLED = True
+UNFOLD_MODAL_ENABLED = False
 UNFOLD_MODAL_SIZE="large"
 UNFOLD_MODAL_RESIZE=True
 
