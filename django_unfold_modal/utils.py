@@ -1,6 +1,7 @@
 """Utility functions for django-unfold-modal."""
 
 from django.templatetags.static import static
+from django.urls import reverse
 
 
 def get_modal_scripts():
@@ -22,8 +23,16 @@ def get_modal_scripts():
                 *get_modal_scripts(),
             ],
         }
+
+    Note:
+        The config script must be included before the modal script so that
+        window.UNFOLD_MODAL_CONFIG is available when related_modal.js runs.
     """
     return [
+        # Config script (dynamic, sets window.UNFOLD_MODAL_CONFIG)
+        lambda request: reverse("django_unfold_modal:config_js"),
+        # Main modal script
         lambda request: static("django_unfold_modal/js/related_modal.js"),
+        # Popup iframe script
         lambda request: static("django_unfold_modal/js/popup_iframe.js"),
     ]
