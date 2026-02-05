@@ -6,10 +6,10 @@ from playwright.sync_api import expect
 
 @pytest.mark.django_db(transaction=True)
 class TestModalSizeConfigured:
-    """Test modal size dimensions with testapp configuration (large preset)."""
+    """Test modal size dimensions with testapp configuration (large preset + resize enabled)."""
 
-    def test_large_size_dimensions(self, authenticated_page, live_server):
-        """Modal should have large dimensions (testapp is configured with UNFOLD_MODAL_SIZE='large')."""
+    def test_large_size_initial_dimensions(self, authenticated_page, live_server):
+        """Modal should start with large preset width (testapp: UNFOLD_MODAL_SIZE='large', UNFOLD_MODAL_RESIZE=True)."""
         page = authenticated_page
         page.goto(f"{live_server.url}/admin/testapp/book/add/")
 
@@ -21,9 +21,10 @@ class TestModalSizeConfigured:
         container = page.locator(".unfold-modal-container")
         expect(container).to_be_visible()
 
-        # Check computed max-width is 1200px (large preset)
-        max_width = container.evaluate("el => window.getComputedStyle(el).maxWidth")
-        assert max_width == "1200px"
+        # With resize enabled, max-width is 'none' but initial width comes from preset (95%)
+        # Check that the modal's inline width style is set to 95% (large preset)
+        width_style = container.evaluate("el => el.style.width")
+        assert width_style == "95%", f"Expected width '95%' from large preset, got '{width_style}'"
 
 
 @pytest.mark.django_db(transaction=True)
