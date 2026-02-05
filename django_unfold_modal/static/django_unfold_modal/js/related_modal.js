@@ -378,14 +378,6 @@
         overlay.appendChild(container);
         document.body.appendChild(overlay);
 
-        // Track original dimensions for restore from maximize
-        const originalDimensions = {
-            width: container.style.width,
-            maxWidth: container.style.maxWidth,
-            height: container.style.height,
-            maxHeight: container.style.maxHeight
-        };
-
         // Push onto stack
         const modal = {
             overlay: overlay,
@@ -395,7 +387,7 @@
             title: title,
             maximizeButton: maximizeButton,
             isMaximized: false,
-            originalDimensions: originalDimensions
+            preMaximizeDimensions: null  // Set when maximizing to preserve user's resize
         };
         modalStack.push(modal);
 
@@ -418,7 +410,7 @@
 
         // Resize tracking via ResizeObserver to enforce max bounds
         if (resizeEnabled) {
-            setupResizeTracking(container, modal);
+            modal.resizeCleanup = setupResizeTracking(container, modal);
         }
 
         // Animate in
@@ -444,15 +436,15 @@
      * Toggle maximize state for a modal.
      */
     function toggleMaximize(modal) {
-        const { container, maximizeButton, originalDimensions } = modal;
+        const { container, maximizeButton } = modal;
         const bounds = getMaximizeBounds();
 
         if (modal.isMaximized) {
-            // Restore to original dimensions
-            container.style.width = originalDimensions.width;
-            container.style.maxWidth = originalDimensions.maxWidth;
-            container.style.height = originalDimensions.height;
-            container.style.maxHeight = originalDimensions.maxHeight;
+            // Restore to pre-maximize dimensions
+            container.style.width = modal.preMaximizeDimensions.width;
+            container.style.maxWidth = modal.preMaximizeDimensions.maxWidth;
+            container.style.height = modal.preMaximizeDimensions.height;
+            container.style.maxHeight = modal.preMaximizeDimensions.maxHeight;
             maximizeButton.title = 'Maximize';
             // Restore icon to maximize (rectangle)
             maximizeButton.innerHTML = `
@@ -462,6 +454,13 @@
             `;
             modal.isMaximized = false;
         } else {
+            // Capture current dimensions before maximizing (preserves user's resize)
+            modal.preMaximizeDimensions = {
+                width: container.style.width,
+                maxWidth: container.style.maxWidth,
+                height: container.style.height,
+                maxHeight: container.style.maxHeight
+            };
             // Maximize to bounds
             container.style.width = bounds.width + 'px';
             container.style.maxWidth = 'none';
@@ -482,11 +481,13 @@
     /**
      * Setup resize tracking to prevent overlay close during resize
      * and enforce maximum bounds.
+     * Returns cleanup function to disconnect observer and remove listener.
      */
     function setupResizeTracking(container, modal) {
         // Track resize state via mouse events on container edge
         let resizeStartWidth = 0;
         let resizeStartHeight = 0;
+        let observer = null;
 
         // Detect resize start by watching for mousedown near the resize handle
         container.addEventListener('mousedown', function(e) {
@@ -502,15 +503,16 @@
         });
 
         // End resize on any mouseup (including over overlay)
-        document.addEventListener('mouseup', function() {
+        function handleMouseUp() {
             if (isResizing) {
                 isResizing = false;
             }
-        });
+        }
+        document.addEventListener('mouseup', handleMouseUp);
 
         // Use ResizeObserver to enforce max bounds during resize
         if (typeof ResizeObserver !== 'undefined') {
-            const observer = new ResizeObserver(function(entries) {
+            observer = new ResizeObserver(function(entries) {
                 for (const entry of entries) {
                     const bounds = getMaximizeBounds();
                     const el = entry.target;
@@ -537,6 +539,14 @@
             });
             observer.observe(container);
         }
+
+        // Return cleanup function
+        return function cleanup() {
+            document.removeEventListener('mouseup', handleMouseUp);
+            if (observer) {
+                observer.disconnect();
+            }
+        };
     }
 
     /**
@@ -550,8 +560,13 @@
         isClosing = true;
 
         const modalToClose = modalStack.pop();
-        const { overlay, container } = modalToClose;
+        const { overlay, container, resizeCleanup } = modalToClose;
         const previousModal = getActiveModal();
+
+        // Clean up resize tracking if present
+        if (resizeCleanup) {
+            resizeCleanup();
+        }
 
         if (previousModal) {
             // Show previous modal immediately (behind current) to avoid flicker
