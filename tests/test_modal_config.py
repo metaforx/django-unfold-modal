@@ -14,6 +14,7 @@ class TestModalConfig:
         assert response.status_code == 200
         assert response["Content-Type"] == "application/javascript"
 
+    @override_settings(UNFOLD_MODAL_SIZE="default")
     def test_config_js_contains_default_dimensions(self, client):
         """Config should contain default dimensions when not configured."""
         response = client.get("/unfold-modal/config.js")
@@ -47,6 +48,7 @@ class TestModalConfig:
         content = response.content.decode()
         assert '"resize": true' in content
 
+    @override_settings(UNFOLD_MODAL_RESIZE=False)
     def test_config_js_resize_false_by_default(self, client):
         """Config should have resize false by default."""
         response = client.get("/unfold-modal/config.js")
