@@ -419,11 +419,18 @@
             container.style.transform = 'scale(1)';
         });
 
-        // Close on overlay click (not container), but not during resize
+        // Track mousedown on overlay itself (not bubbled from children)
+        let mousedownOnOverlay = false;
+        overlay.addEventListener('mousedown', function(e) {
+            mousedownOnOverlay = (e.target === overlay);
+        });
+
+        // Close on overlay click only if mousedown was also on overlay (not resize drag)
         overlay.addEventListener('click', function(e) {
-            if (e.target === overlay && !isResizing) {
+            if (e.target === overlay && mousedownOnOverlay && !isResizing) {
                 closeModal();
             }
+            mousedownOnOverlay = false;
         });
 
         // ESC handler – attach once for the first modal
@@ -573,7 +580,10 @@
             previousModal.overlay.style.display = 'flex';
             previousModal.overlay.style.opacity = '1';
 
-            // Only fade out the container, keep overlay visible
+            // Make closing modal's overlay transparent immediately to avoid double-darkening
+            overlay.style.background = 'transparent';
+
+            // Only fade out the container
             container.style.transform = 'scale(0.95)';
             container.style.opacity = '0';
             container.style.transition = 'transform 0.15s ease-out, opacity 0.1s ease-out';

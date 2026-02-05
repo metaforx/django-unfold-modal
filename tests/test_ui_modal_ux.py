@@ -213,3 +213,164 @@ class TestModalStackUX:
         first_overlay = page.locator(".unfold-modal-overlay").first
         opacity = first_overlay.evaluate("el => window.getComputedStyle(el).opacity")
         assert opacity == "1"
+
+
+@pytest.mark.django_db(transaction=True)
+class TestModalResizeDrag:
+    """Test resize drag over overlay (T13b)."""
+
+    def test_resize_drag_release_over_overlay_does_not_close(self, authenticated_page, live_server):
+        """Releasing resize drag over overlay should not close the modal."""
+        page = authenticated_page
+        page.goto(f"{live_server.url}/admin/testapp/book/add/")
+
+        page.click("#add_id_category")
+        page.wait_for_selector(".unfold-modal-overlay")
+        page.wait_for_timeout(300)
+
+        container = page.locator(".unfold-modal-container")
+        overlay = page.locator(".unfold-modal-overlay")
+
+        # Get container bounding box
+        box = container.bounding_box()
+        # Start drag near bottom-right corner (resize handle area)
+        start_x = box["x"] + box["width"] - 10
+        start_y = box["y"] + box["height"] - 10
+
+        # Simulate drag: mousedown on resize area, move outside container, mouseup on overlay
+        page.mouse.move(start_x, start_y)
+        page.mouse.down()
+
+        # Move mouse to overlay area (outside container)
+        overlay_box = overlay.bounding_box()
+        end_x = overlay_box["x"] + 50  # Left side of overlay, outside container
+        end_y = overlay_box["y"] + 50
+
+        page.mouse.move(end_x, end_y)
+        page.mouse.up()
+
+        # Modal should still be visible (not closed)
+        page.wait_for_timeout(200)
+        expect(container).to_be_visible()
+
+
+@pytest.mark.django_db(transaction=True)
+class TestModalFullscreenPersistence:
+    """Test fullscreen/maximize state persists across nested modal open/close (T13b)."""
+
+    def test_maximize_persists_after_nested_modal(self, authenticated_page, live_server):
+        """If modal is maximized, it should stay maximized after nested modal closes."""
+        page = authenticated_page
+        page.goto(f"{live_server.url}/admin/testapp/event/add/")
+
+        # Open first modal (Venue)
+        page.click("#add_id_venue")
+        page.wait_for_selector(".unfold-modal-overlay")
+        page.wait_for_timeout(300)
+
+        # Maximize the first modal
+        first_container = page.locator(".unfold-modal-container").first
+        first_maximize_btn = page.locator(".unfold-modal-maximize").first
+        first_maximize_btn.click()
+        page.wait_for_timeout(100)
+
+        # Verify it's maximized
+        maximized_width = first_container.evaluate("el => el.offsetWidth")
+        viewport_width = page.evaluate("window.innerWidth")
+        assert maximized_width >= viewport_width - 50  # Near viewport width
+
+        # Button should say "Restore"
+        assert first_maximize_btn.get_attribute("title") == "Restore"
+
+        # Open nested modal (City)
+        first_iframe = page.frame_locator(".unfold-modal-iframe").first
+        first_iframe.locator("#add_id_city").click()
+        page.wait_for_timeout(500)
+
+        # Should have 2 modals now
+        assert page.locator(".unfold-modal-overlay").count() == 2
+
+        # Close nested modal
+        page.locator(".unfold-modal-close").last.click()
+        page.wait_for_timeout(300)
+
+        # Should have 1 modal left
+        assert page.locator(".unfold-modal-overlay").count() == 1
+
+        # First modal should still be maximized
+        restored_width = first_container.evaluate("el => el.offsetWidth")
+        assert restored_width >= viewport_width - 50  # Still near viewport width
+
+        # Maximize button should still say "Restore"
+        assert first_maximize_btn.get_attribute("title") == "Restore"
+
+    def test_maximize_button_works_after_nested_modal(self, authenticated_page, live_server):
+        """Maximize button should still toggle correctly after nested modal closes."""
+        page = authenticated_page
+        page.goto(f"{live_server.url}/admin/testapp/event/add/")
+
+        # Open first modal
+        page.click("#add_id_venue")
+        page.wait_for_selector(".unfold-modal-overlay")
+        page.wait_for_timeout(300)
+
+        first_container = page.locator(".unfold-modal-container").first
+        first_maximize_btn = page.locator(".unfold-modal-maximize").first
+
+        # Get initial width
+        initial_width = first_container.evaluate("el => el.offsetWidth")
+
+        # Maximize
+        first_maximize_btn.click()
+        page.wait_for_timeout(100)
+
+        # Open nested modal
+        first_iframe = page.frame_locator(".unfold-modal-iframe").first
+        first_iframe.locator("#add_id_city").click()
+        page.wait_for_timeout(500)
+
+        # Close nested modal
+        page.locator(".unfold-modal-close").last.click()
+        page.wait_for_timeout(300)
+
+        # Click maximize button again (should restore)
+        first_maximize_btn.click()
+        page.wait_for_timeout(100)
+
+        # Should be restored to initial size
+        restored_width = first_container.evaluate("el => el.offsetWidth")
+        assert abs(restored_width - initial_width) < 50  # Close to initial
+
+        # Button should say "Maximize" again
+        assert first_maximize_btn.get_attribute("title") == "Maximize"
+
+
+@pytest.mark.django_db(transaction=True)
+class TestOverlayNoDoubleFlicker:
+    """Test overlay doesn't show double-darkening effect (T13b)."""
+
+    def test_closing_overlay_becomes_transparent(self, authenticated_page, live_server):
+        """When closing nested modal, its overlay should become transparent."""
+        page = authenticated_page
+        page.goto(f"{live_server.url}/admin/testapp/event/add/")
+
+        # Open first modal
+        page.click("#add_id_venue")
+        page.wait_for_selector(".unfold-modal-overlay")
+        page.wait_for_timeout(300)
+
+        # Open nested modal
+        first_iframe = page.frame_locator(".unfold-modal-iframe").first
+        first_iframe.locator("#add_id_city").click()
+        page.wait_for_timeout(500)
+
+        # Get reference to second overlay
+        second_overlay = page.locator(".unfold-modal-overlay").last
+
+        # Close nested modal
+        page.locator(".unfold-modal-close").last.click()
+
+        # The closing overlay should have transparent background immediately
+        bg = second_overlay.evaluate("el => window.getComputedStyle(el).background")
+        # Should contain 'transparent' or 'rgba(0, 0, 0, 0)'
+        assert "transparent" in bg or "rgba(0, 0, 0, 0)" in bg
