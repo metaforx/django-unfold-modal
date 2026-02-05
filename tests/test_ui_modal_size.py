@@ -5,11 +5,11 @@ from playwright.sync_api import expect
 
 
 @pytest.mark.django_db(transaction=True)
-class TestModalSizeDefault:
-    """Test default modal size dimensions."""
+class TestModalSizeConfigured:
+    """Test modal size dimensions with testapp configuration (large preset)."""
 
-    def test_default_size_dimensions(self, authenticated_page, live_server):
-        """Modal should have default dimensions (90% width, 900px max)."""
+    def test_large_size_dimensions(self, authenticated_page, live_server):
+        """Modal should have large dimensions (testapp is configured with UNFOLD_MODAL_SIZE='large')."""
         page = authenticated_page
         page.goto(f"{live_server.url}/admin/testapp/book/add/")
 
@@ -21,9 +21,9 @@ class TestModalSizeDefault:
         container = page.locator(".unfold-modal-container")
         expect(container).to_be_visible()
 
-        # Check computed max-width is 900px (default)
+        # Check computed max-width is 1200px (large preset)
         max_width = container.evaluate("el => window.getComputedStyle(el).maxWidth")
-        assert max_width == "900px"
+        assert max_width == "1200px"
 
 
 @pytest.mark.django_db(transaction=True)
@@ -53,7 +53,7 @@ class TestModalConfigLoaded:
         assert has_dimensions, "Config should have dimensions"
 
     def test_config_has_resize_flag(self, authenticated_page, live_server):
-        """Config should have resize flag."""
+        """Config should have resize flag (testapp is configured with UNFOLD_MODAL_RESIZE=True)."""
         page = authenticated_page
         page.goto(f"{live_server.url}/admin/testapp/book/add/")
         page.wait_for_timeout(500)
@@ -61,5 +61,5 @@ class TestModalConfigLoaded:
         resize_value = page.evaluate(
             "window.UNFOLD_MODAL_CONFIG && window.UNFOLD_MODAL_CONFIG.resize"
         )
-        # Default is false
-        assert resize_value is False
+        # Testapp has resize enabled
+        assert resize_value is True
