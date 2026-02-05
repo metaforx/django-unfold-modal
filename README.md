@@ -64,8 +64,9 @@ UNFOLD_MODAL_RESIZE = False
 
 ### Size Presets
 
-To use custom size presets (`UNFOLD_MODAL_SIZE`) or enable resize (`UNFOLD_MODAL_RESIZE`),
-include the app's URLs in your `urls.py`:
+To use custom size presets (`UNFOLD_MODAL_SIZE`) or enable resize (`UNFOLD_MODAL_RESIZE`):
+
+1. Include the app's URLs in your `urls.py`:
 
 ```python
 from django.urls import include, path
@@ -74,6 +75,18 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("unfold-modal/", include("django_unfold_modal.urls")),
 ]
+```
+
+2. Use `get_modal_scripts_with_config` instead of `get_modal_scripts` in `settings.py`:
+
+```python
+from django_unfold_modal.utils import get_modal_scripts_with_config
+
+UNFOLD = {
+    "SCRIPTS": [
+        *get_modal_scripts_with_config(),
+    ],
+}
 ```
 
 | Preset    | Width | Max Width | Height | Max Height |
