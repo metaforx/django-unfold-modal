@@ -36,6 +36,12 @@
     };
     const resizeEnabled = config.resize || false;
 
+    // Resize tracking – prevents overlay click from closing modal during resize
+    let isResizing = false;
+
+    // CSS injection flag
+    let stylesInjected = false;
+
     /**
      * Return the active (topmost) modal, or null.
      */
@@ -91,6 +97,61 @@
             document.body.style.paddingRight = savedScrollStyles.paddingRight;
             savedScrollStyles = null;
         }
+    }
+
+    /**
+     * Get maximize bounds (viewport minus margins matching Unfold container).
+     * Returns { width, height } in pixels.
+     */
+    function getMaximizeBounds() {
+        // Use 1rem (16px) margin on each side like Unfold's container padding
+        const margin = 16;
+        return {
+            width: window.innerWidth - (margin * 2),
+            height: window.innerHeight - (margin * 2)
+        };
+    }
+
+    /**
+     * Inject CSS styles for dark mode support.
+     */
+    function injectStyles() {
+        if (stylesInjected) return;
+        stylesInjected = true;
+
+        const style = document.createElement('style');
+        style.textContent = `
+            /* Dark mode support for modal */
+            .dark .unfold-modal-container,
+            [data-theme="dark"] .unfold-modal-container {
+                background: var(--unfold-bg-color, #1f2937);
+            }
+            .dark .unfold-modal-header,
+            [data-theme="dark"] .unfold-modal-header {
+                border-bottom-color: var(--unfold-border-color, #374151);
+            }
+            .dark .unfold-modal-title,
+            [data-theme="dark"] .unfold-modal-title {
+                color: var(--unfold-text-color, #f3f4f6);
+            }
+            .dark .unfold-modal-close,
+            .dark .unfold-modal-maximize,
+            [data-theme="dark"] .unfold-modal-close,
+            [data-theme="dark"] .unfold-modal-maximize {
+                color: var(--unfold-text-color, #9ca3af);
+            }
+            .dark .unfold-modal-close:hover,
+            .dark .unfold-modal-maximize:hover,
+            [data-theme="dark"] .unfold-modal-close:hover,
+            [data-theme="dark"] .unfold-modal-maximize:hover {
+                background: var(--unfold-hover-bg, #374151) !important;
+            }
+            .dark .unfold-modal-iframe,
+            [data-theme="dark"] .unfold-modal-iframe {
+                background: var(--unfold-bg-color, #1f2937);
+            }
+        `;
+        document.head.appendChild(style);
     }
 
     /**
@@ -157,22 +218,85 @@
     }
 
     /**
-     * Create modal header with close button
+     * Create modal header with title, maximize button, and close button
      */
     function createModalHeader() {
         const header = document.createElement('div');
         header.className = 'unfold-modal-header';
         header.style.cssText = `
             display: flex;
-            justify-content: flex-end;
+            align-items: center;
             padding: 0.5rem;
             border-bottom: 1px solid var(--unfold-border-color, #e5e7eb);
             flex-shrink: 0;
+            min-height: 2.5rem;
         `;
 
+        // Spacer for symmetry (same width as button group)
+        const leftSpacer = document.createElement('div');
+        leftSpacer.style.cssText = `
+            width: 5rem;
+            flex-shrink: 0;
+        `;
+
+        // Title element (centered)
+        const title = document.createElement('span');
+        title.className = 'unfold-modal-title';
+        title.style.cssText = `
+            flex: 1;
+            text-align: center;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--unfold-text-color, #374151);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            padding: 0 0.5rem;
+        `;
+        title.textContent = '';
+
+        // Button group (right side)
+        const buttonGroup = document.createElement('div');
+        buttonGroup.style.cssText = `
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            flex-shrink: 0;
+        `;
+
+        // Maximize button
+        const maximizeButton = document.createElement('button');
+        maximizeButton.type = 'button';
+        maximizeButton.className = 'unfold-modal-maximize';
+        maximizeButton.title = 'Maximize';
+        maximizeButton.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+            </svg>
+        `;
+        maximizeButton.style.cssText = `
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0.5rem;
+            color: var(--unfold-text-color, #6b7280);
+            border-radius: 0.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        `;
+        maximizeButton.addEventListener('mouseenter', function() {
+            this.style.background = 'var(--unfold-hover-bg, #f3f4f6)';
+        });
+        maximizeButton.addEventListener('mouseleave', function() {
+            this.style.background = 'none';
+        });
+
+        // Close button
         const closeButton = document.createElement('button');
         closeButton.type = 'button';
         closeButton.className = 'unfold-modal-close';
+        closeButton.title = 'Close';
         closeButton.innerHTML = `
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -198,8 +322,14 @@
             this.style.background = 'none';
         });
 
-        header.appendChild(closeButton);
-        return header;
+        buttonGroup.appendChild(maximizeButton);
+        buttonGroup.appendChild(closeButton);
+
+        header.appendChild(leftSpacer);
+        header.appendChild(title);
+        header.appendChild(buttonGroup);
+
+        return { header, title, maximizeButton };
     }
 
     /**
@@ -224,6 +354,9 @@
      * If a modal is already visible it is hidden and pushed down the stack.
      */
     function openModal(url, iframeName) {
+        // Inject dark mode styles on first use
+        injectStyles();
+
         const currentModal = getActiveModal();
 
         // Hide current modal (don't remove) so it can be restored later
@@ -237,7 +370,7 @@
         // Create modal structure
         const overlay = createModalOverlay();
         const container = createModalContainer();
-        const header = createModalHeader();
+        const { header, title, maximizeButton } = createModalHeader();
         const iframe = createIframe(url, iframeName);
 
         container.appendChild(header);
@@ -245,14 +378,48 @@
         overlay.appendChild(container);
         document.body.appendChild(overlay);
 
+        // Track original dimensions for restore from maximize
+        const originalDimensions = {
+            width: container.style.width,
+            maxWidth: container.style.maxWidth,
+            height: container.style.height,
+            maxHeight: container.style.maxHeight
+        };
+
         // Push onto stack
         const modal = {
             overlay: overlay,
             container: container,
             iframe: iframe,
-            iframeName: iframeName
+            iframeName: iframeName,
+            title: title,
+            maximizeButton: maximizeButton,
+            isMaximized: false,
+            originalDimensions: originalDimensions
         };
         modalStack.push(modal);
+
+        // Maximize button handler
+        maximizeButton.addEventListener('click', function() {
+            toggleMaximize(modal);
+        });
+
+        // Update title when iframe loads
+        iframe.addEventListener('load', function() {
+            try {
+                const iframeTitle = iframe.contentDocument.title;
+                if (iframeTitle) {
+                    title.textContent = iframeTitle;
+                }
+            } catch (e) {
+                // Cross-origin – cannot access title
+            }
+        });
+
+        // Resize tracking via ResizeObserver to enforce max bounds
+        if (resizeEnabled) {
+            setupResizeTracking(container, modal);
+        }
 
         // Animate in
         requestAnimationFrame(function() {
@@ -260,9 +427,9 @@
             container.style.transform = 'scale(1)';
         });
 
-        // Close on overlay click (not container)
+        // Close on overlay click (not container), but not during resize
         overlay.addEventListener('click', function(e) {
-            if (e.target === overlay) {
+            if (e.target === overlay && !isResizing) {
                 closeModal();
             }
         });
@@ -274,8 +441,108 @@
     }
 
     /**
+     * Toggle maximize state for a modal.
+     */
+    function toggleMaximize(modal) {
+        const { container, maximizeButton, originalDimensions } = modal;
+        const bounds = getMaximizeBounds();
+
+        if (modal.isMaximized) {
+            // Restore to original dimensions
+            container.style.width = originalDimensions.width;
+            container.style.maxWidth = originalDimensions.maxWidth;
+            container.style.height = originalDimensions.height;
+            container.style.maxHeight = originalDimensions.maxHeight;
+            maximizeButton.title = 'Maximize';
+            // Restore icon to maximize (rectangle)
+            maximizeButton.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                </svg>
+            `;
+            modal.isMaximized = false;
+        } else {
+            // Maximize to bounds
+            container.style.width = bounds.width + 'px';
+            container.style.maxWidth = 'none';
+            container.style.height = bounds.height + 'px';
+            container.style.maxHeight = 'none';
+            maximizeButton.title = 'Restore';
+            // Change icon to restore (overlapping rectangles)
+            maximizeButton.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="5" y="7" width="14" height="14" rx="2" ry="2"></rect>
+                    <path d="M9 3h10a2 2 0 0 1 2 2v10"></path>
+                </svg>
+            `;
+            modal.isMaximized = true;
+        }
+    }
+
+    /**
+     * Setup resize tracking to prevent overlay close during resize
+     * and enforce maximum bounds.
+     */
+    function setupResizeTracking(container, modal) {
+        // Track resize state via mouse events on container edge
+        let resizeStartWidth = 0;
+        let resizeStartHeight = 0;
+
+        // Detect resize start by watching for mousedown near the resize handle
+        container.addEventListener('mousedown', function(e) {
+            const rect = container.getBoundingClientRect();
+            const nearRight = e.clientX > rect.right - 20;
+            const nearBottom = e.clientY > rect.bottom - 20;
+
+            if (nearRight || nearBottom) {
+                isResizing = true;
+                resizeStartWidth = container.offsetWidth;
+                resizeStartHeight = container.offsetHeight;
+            }
+        });
+
+        // End resize on any mouseup (including over overlay)
+        document.addEventListener('mouseup', function() {
+            if (isResizing) {
+                isResizing = false;
+            }
+        });
+
+        // Use ResizeObserver to enforce max bounds during resize
+        if (typeof ResizeObserver !== 'undefined') {
+            const observer = new ResizeObserver(function(entries) {
+                for (const entry of entries) {
+                    const bounds = getMaximizeBounds();
+                    const el = entry.target;
+
+                    // Clamp to maximize bounds
+                    if (el.offsetWidth > bounds.width) {
+                        el.style.width = bounds.width + 'px';
+                    }
+                    if (el.offsetHeight > bounds.height) {
+                        el.style.height = bounds.height + 'px';
+                    }
+
+                    // If resized manually and was maximized, exit maximize state
+                    if (modal.isMaximized && isResizing) {
+                        modal.isMaximized = false;
+                        modal.maximizeButton.title = 'Maximize';
+                        modal.maximizeButton.innerHTML = `
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                            </svg>
+                        `;
+                    }
+                }
+            });
+            observer.observe(container);
+        }
+    }
+
+    /**
      * Close the active (topmost) modal.
      * If the stack has more modals beneath it, the previous one is restored.
+     * Stack UX: Previous modal is shown immediately to avoid flicker.
      */
     function closeModal() {
         if (modalStack.length === 0 || isClosing) return;
@@ -284,22 +551,30 @@
 
         const modalToClose = modalStack.pop();
         const { overlay, container } = modalToClose;
+        const previousModal = getActiveModal();
 
-        // Animate out
-        overlay.style.opacity = '0';
-        container.style.transform = 'scale(0.95)';
+        if (previousModal) {
+            // Show previous modal immediately (behind current) to avoid flicker
+            previousModal.overlay.style.display = 'flex';
+            previousModal.overlay.style.opacity = '1';
 
-        // Remove from DOM after animation, then restore previous if any
+            // Only fade out the container, keep overlay visible
+            container.style.transform = 'scale(0.95)';
+            container.style.opacity = '0';
+            container.style.transition = 'transform 0.15s ease-out, opacity 0.1s ease-out';
+        } else {
+            // Last modal – fade entire overlay
+            overlay.style.opacity = '0';
+            container.style.transform = 'scale(0.95)';
+        }
+
+        // Remove from DOM after animation
         setTimeout(function() {
             if (overlay.parentNode) {
                 overlay.parentNode.removeChild(overlay);
             }
 
-            const previousModal = getActiveModal();
-            if (previousModal) {
-                // Restore previous modal
-                previousModal.overlay.style.display = 'flex';
-            } else {
+            if (!previousModal) {
                 // Stack empty – unlock scroll and detach ESC handler
                 unlockScroll();
                 document.removeEventListener('keydown', handleEscKey);
