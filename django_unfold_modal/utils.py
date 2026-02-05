@@ -1,7 +1,21 @@
 """Utility functions for django-unfold-modal."""
 
 from django.templatetags.static import static
-from django.urls import reverse
+from django.urls import NoReverseMatch, reverse
+
+
+def _get_config_url(request):
+    """
+    Get the URL for the modal config JS endpoint.
+
+    Returns the reverse URL if the app's URLs are included in ROOT_URLCONF,
+    otherwise returns None (config script is skipped, modal uses defaults).
+    """
+    try:
+        return reverse("django_unfold_modal:config_js")
+    except NoReverseMatch:
+        # App URLs not included - config.js won't be loaded, modal uses defaults
+        return None
 
 
 def get_modal_scripts():
@@ -25,12 +39,17 @@ def get_modal_scripts():
         }
 
     Note:
-        The config script must be included before the modal script so that
-        window.UNFOLD_MODAL_CONFIG is available when related_modal.js runs.
+        For custom size presets (UNFOLD_MODAL_SIZE) or resize functionality
+        (UNFOLD_MODAL_RESIZE), include the app's URLs in your ROOT_URLCONF:
+
+            path("unfold-modal/", include("django_unfold_modal.urls")),
+
+        Without this, the modal will use default dimensions.
     """
     return [
         # Config script (dynamic, sets window.UNFOLD_MODAL_CONFIG)
-        lambda request: reverse("django_unfold_modal:config_js"),
+        # Returns None if app URLs not included, which Unfold filters out
+        _get_config_url,
         # Main modal script
         lambda request: static("django_unfold_modal/js/related_modal.js"),
         # Popup iframe script
