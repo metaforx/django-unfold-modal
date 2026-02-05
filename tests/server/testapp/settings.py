@@ -2,7 +2,7 @@ from os import environ
 from pathlib import Path
 
 from django.core.management.utils import get_random_secret_key
-from django_unfold_modal.utils import get_modal_scripts
+from django_unfold_modal.utils import get_modal_scripts_with_config
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -32,7 +32,7 @@ UNFOLD_MODAL_ENABLED = True
 
 UNFOLD = {
     "SCRIPTS": [
-        *get_modal_scripts(),
+        *get_modal_scripts_with_config(),
     ],
 }
 

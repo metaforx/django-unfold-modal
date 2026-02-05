@@ -1,21 +1,7 @@
 """Utility functions for django-unfold-modal."""
 
 from django.templatetags.static import static
-from django.urls import NoReverseMatch, reverse
-
-
-def _get_config_url(request):
-    """
-    Get the URL for the modal config JS endpoint.
-
-    Returns the reverse URL if the app's URLs are included in ROOT_URLCONF,
-    otherwise returns None (config script is skipped, modal uses defaults).
-    """
-    try:
-        return reverse("django_unfold_modal:config_js")
-    except NoReverseMatch:
-        # App URLs not included - config.js won't be loaded, modal uses defaults
-        return None
+from django.urls import reverse
 
 
 def get_modal_scripts():
@@ -47,9 +33,37 @@ def get_modal_scripts():
         Without this, the modal will use default dimensions.
     """
     return [
+        # Main modal script
+        lambda request: static("django_unfold_modal/js/related_modal.js"),
+        # Popup iframe script
+        lambda request: static("django_unfold_modal/js/popup_iframe.js"),
+    ]
+
+
+def get_modal_scripts_with_config():
+    """
+    Return modal scripts including the config endpoint.
+
+    Use this instead of get_modal_scripts() when you have included the
+    app's URLs in your ROOT_URLCONF:
+
+        path("unfold-modal/", include("django_unfold_modal.urls")),
+
+    This enables custom size presets (UNFOLD_MODAL_SIZE) and resize
+    functionality (UNFOLD_MODAL_RESIZE).
+
+    Example:
+        from django_unfold_modal.utils import get_modal_scripts_with_config
+
+        UNFOLD = {
+            "SCRIPTS": [
+                *get_modal_scripts_with_config(),
+            ],
+        }
+    """
+    return [
         # Config script (dynamic, sets window.UNFOLD_MODAL_CONFIG)
-        # Returns None if app URLs not included, which Unfold filters out
-        _get_config_url,
+        lambda request: reverse("django_unfold_modal:config_js"),
         # Main modal script
         lambda request: static("django_unfold_modal/js/related_modal.js"),
         # Popup iframe script
