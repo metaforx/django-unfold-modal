@@ -14,6 +14,7 @@ class DjangoUnfoldModalConfig(AppConfig):
         "UNFOLD_MODAL_PRESENTATION": "modal",  # Reserved for future "drawer"
         "UNFOLD_MODAL_SIZE": "default",  # Presets: "default", "large", "full"
         "UNFOLD_MODAL_RESIZE": False,  # Enable manual resize handle
+        "UNFOLD_MODAL_DISABLE_HEADER": True,  # Hide admin header in modal iframes
     }
 
     # Size preset dimensions (width, maxWidth, height, maxHeight)
