@@ -6,6 +6,10 @@ Goal
 Suggested Skill
 - Use `$unfold-dev-structured` (Sonnet).
 - Review with `$unfold-codex-reviewer`.
+- Model guidance (Claude CLI):
+  - Use **Opus** for the analysis pass (identify minimal model set + test impacts).
+  - Use **Sonnet** for the implementation pass (apply model/test edits).
+  - If split, mark output clearly as **ANALYSIS** vs **EXECUTION**.
 
 Scope
 - Audit `tests/server/testapp/models.py` and identify redundant models.
