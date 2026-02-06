@@ -31,16 +31,6 @@ class Author(models.Model):
         return self.name
 
 
-class Profile(models.Model):
-    """OneToOne related model testing."""
-
-    author = models.OneToOneField(Author, on_delete=models.CASCADE)
-    bio = models.TextField(blank=True)
-
-    def __str__(self):
-        return f"Profile of {self.author.name}"
-
-
 class Publisher(models.Model):
     """Model for raw_id_fields lookup widget testing."""
 

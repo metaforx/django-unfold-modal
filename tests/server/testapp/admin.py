@@ -10,7 +10,6 @@ from .models import (
     City,
     Country,
     Event,
-    Profile,
     Publisher,
     Tag,
     Venue,
@@ -33,12 +32,6 @@ class TagAdmin(ModelAdmin):
 class AuthorAdmin(ModelAdmin):
     list_display = ["name"]
     search_fields = ["name"]
-
-
-@admin.register(Profile)
-class ProfileAdmin(ModelAdmin):
-    list_display = ["author", "bio"]
-    autocomplete_fields = ["author"]
 
 
 @admin.register(Publisher)
