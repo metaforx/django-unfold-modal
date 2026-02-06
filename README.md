@@ -4,6 +4,14 @@ Modal-based related-object popups for [django-unfold](https://github.com/unfolda
 
 Replaces Django admin's popup windows for related objects (ForeignKey, ManyToMany, etc.) with Unfold-styled modals.
 
+## Features
+
+- Modal replacement for admin related-object popups
+- Supports nested modals (replace/restore behavior)
+- Raw ID lookup + autocomplete + inline related fields
+- Optional modal resize + size presets
+- Optional admin header suppression inside iframe
+
 ## Requirements
 
 - Python 3.10+
@@ -103,6 +111,15 @@ UNFOLD = {
 - `raw_id_fields` lookup
 - `autocomplete_fields` (Select2)
 - Related fields within inline forms
+
+## Testing
+
+```bash
+pytest -q
+pytest --browser chromium
+```
+
+See `tests/README.md` for the test app overview and Playwright scope.
 
 ## License
 
