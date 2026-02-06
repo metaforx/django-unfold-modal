@@ -25,6 +25,8 @@ Scope
 - Collapse the two-stage wait logic into a single initializer:
   - Do not combine `DOMContentLoaded` + polling unless necessary.
   - Prefer a single `initWhenReady()` that either waits for `django.jQuery` or falls back once DOM is ready.
+- DRY event handling:
+  - Centralize key handling (ESC) into a shared handler function rather than inline anonymous listeners.
 
 Non-goals
 - No behavior changes beyond these cleanup rules.
