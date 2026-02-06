@@ -12,6 +12,12 @@
     const utils = Modal.utils;
     const dom = Modal.dom;
     const resizeEnabled = Modal.resizeEnabled;
+    const MSG = Modal.MSG;
+    const ICONS = Modal.ICONS;
+
+    // Prefix patterns for popup name extraction
+    const SHOW_RELATED_PREFIX = /^(change|add|delete|view)_/;
+    const LOOKUP_PREFIX = /^lookup_/;
 
     // ---------------------------------------------------------------
     // Resize and Maximize
@@ -31,11 +37,7 @@
             container.style.height = modal.preMaximizeDimensions.height;
             container.style.maxHeight = modal.preMaximizeDimensions.maxHeight;
             maximizeButton.title = 'Maximize';
-            maximizeButton.innerHTML = `
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                </svg>
-            `;
+            maximizeButton.innerHTML = ICONS.maximize;
             modal.isMaximized = false;
         } else {
             // Capture current dimensions before maximizing
@@ -51,12 +53,7 @@
             container.style.height = bounds.height + 'px';
             container.style.maxHeight = 'none';
             maximizeButton.title = 'Restore';
-            maximizeButton.innerHTML = `
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="5" y="7" width="14" height="14" rx="2" ry="2"></rect>
-                    <path d="M9 3h10a2 2 0 0 1 2 2v10"></path>
-                </svg>
-            `;
+            maximizeButton.innerHTML = ICONS.restore;
             modal.isMaximized = true;
         }
     }
@@ -122,11 +119,7 @@
                     if (modal.isMaximized && state.isResizing) {
                         modal.isMaximized = false;
                         modal.maximizeButton.title = 'Maximize';
-                        modal.maximizeButton.innerHTML = `
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                            </svg>
-                        `;
+                        modal.maximizeButton.innerHTML = ICONS.maximize;
                     }
                 }
             });
@@ -267,6 +260,38 @@
             resizeCleanup();
         }
 
+        // Cleanup function to run after animation completes
+        let cleanupDone = false;
+        function cleanupAfterClose() {
+            if (cleanupDone) return;
+            cleanupDone = true;
+
+            if (overlay.parentNode) {
+                overlay.parentNode.removeChild(overlay);
+            }
+
+            if (!previousModal) {
+                // Stack empty – unlock scroll and detach ESC handler
+                utils.unlockScroll();
+                document.removeEventListener('keydown', handleEscKey);
+            }
+
+            state.isClosing = false;
+        }
+
+        // Listen for transition end on the element that animates
+        const animTarget = previousModal ? container : overlay;
+        animTarget.addEventListener('transitionend', function onEnd(e) {
+            // Only trigger on the expected property to avoid double-fires
+            if (e.target === animTarget) {
+                animTarget.removeEventListener('transitionend', onEnd);
+                cleanupAfterClose();
+            }
+        });
+
+        // Fallback: cleanup if transitionend doesn't fire (e.g., prefers-reduced-motion)
+        setTimeout(cleanupAfterClose, 200);
+
         if (previousModal) {
             // Show previous modal immediately to avoid flicker
             previousModal.overlay.style.display = 'flex';
@@ -284,21 +309,6 @@
             overlay.style.opacity = '0';
             container.style.transform = 'scale(0.95)';
         }
-
-        // Remove from DOM after animation
-        setTimeout(function() {
-            if (overlay.parentNode) {
-                overlay.parentNode.removeChild(overlay);
-            }
-
-            if (!previousModal) {
-                // Stack empty – unlock scroll and detach ESC handler
-                utils.unlockScroll();
-                document.removeEventListener('keydown', handleEscKey);
-            }
-
-            state.isClosing = false;
-        }, 150);
     }
 
     // ---------------------------------------------------------------
@@ -332,22 +342,22 @@
      */
     function callDismissFunction(data, fakeWin) {
         switch (data.type) {
-            case 'django:popup:add':
+            case MSG.POPUP_ADD:
                 if (window.dismissAddRelatedObjectPopup) {
                     window.dismissAddRelatedObjectPopup(fakeWin, data.newId, data.newRepr);
                 }
                 break;
-            case 'django:popup:change':
+            case MSG.POPUP_CHANGE:
                 if (window.dismissChangeRelatedObjectPopup) {
                     window.dismissChangeRelatedObjectPopup(fakeWin, data.objId, data.newRepr, data.newId);
                 }
                 break;
-            case 'django:popup:delete':
+            case MSG.POPUP_DELETE:
                 if (window.dismissDeleteRelatedObjectPopup) {
                     window.dismissDeleteRelatedObjectPopup(fakeWin, data.objId);
                 }
                 break;
-            case 'django:popup:lookup':
+            case MSG.POPUP_LOOKUP:
                 if (window.dismissRelatedLookupPopup) {
                     window.dismissRelatedLookupPopup(fakeWin, data.chosenId);
                 }
@@ -370,7 +380,7 @@
         const modalStack = state.modalStack;
 
         // Nested modal request from an iframe
-        if (data.type === 'django:modal:open') {
+        if (data.type === MSG.MODAL_OPEN) {
             if (!activeModal) return;
             if (event.source !== activeModal.iframe.contentWindow) return;
             openModal(data.url, data.iframeName);
@@ -378,7 +388,7 @@
         }
 
         // Close request from an iframe (ESC pressed inside iframe)
-        if (data.type === 'django:modal:close') {
+        if (data.type === MSG.MODAL_CLOSE) {
             if (!activeModal) return;
             if (event.source !== activeModal.iframe.contentWindow) return;
             closeModal();
@@ -403,7 +413,7 @@
             // Forward dismiss data to the restored modal's iframe
             try {
                 previousModal.iframe.contentWindow.postMessage({
-                    type: 'django:modal:dismiss',
+                    type: MSG.MODAL_DISMISS,
                     dismissType: data.type,
                     data: data,
                     iframeName: activeModal.iframeName,
@@ -428,17 +438,12 @@
         event.preventDefault();
 
         const link = event.currentTarget;
-        const href = new URL(link.href);
-
-        if (!href.searchParams.has('_popup')) {
-            href.searchParams.set('_popup', '1');
-        }
-
-        const name = utils.addPopupIndex(link.id.replace(/^(change|add|delete|view)_/, ''));
+        const url = utils.ensurePopupParam(link.href);
+        const name = utils.getPopupName(link.id, SHOW_RELATED_PREFIX);
 
         window.parent.postMessage({
-            type: 'django:modal:open',
-            url: href.toString(),
+            type: MSG.MODAL_OPEN,
+            url: url.toString(),
             iframeName: name
         }, window.location.origin);
     }
@@ -450,17 +455,12 @@
         event.preventDefault();
 
         const link = event.currentTarget;
-        const href = new URL(link.href);
-
-        if (!href.searchParams.has('_popup')) {
-            href.searchParams.set('_popup', '1');
-        }
-
-        const name = utils.addPopupIndex(link.id.replace(/^lookup_/, ''));
+        const url = utils.ensurePopupParam(link.href);
+        const name = utils.getPopupName(link.id, LOOKUP_PREFIX);
 
         window.parent.postMessage({
-            type: 'django:modal:open',
-            url: href.toString(),
+            type: MSG.MODAL_OPEN,
+            url: url.toString(),
             iframeName: name
         }, window.location.origin);
     }
@@ -472,7 +472,7 @@
         if (event.source !== window.parent) return;
 
         const data = event.data;
-        if (!data || data.type !== 'django:modal:dismiss') return;
+        if (!data || data.type !== MSG.MODAL_DISMISS) return;
 
         const popupUrl = data.popupUrl || '';
         const fakeWin = {
@@ -499,15 +499,10 @@
         event.preventDefault();
 
         const link = event.currentTarget;
-        const href = new URL(link.href);
+        const url = utils.ensurePopupParam(link.href);
+        const name = utils.getPopupName(link.id, SHOW_RELATED_PREFIX);
 
-        if (!href.searchParams.has('_popup')) {
-            href.searchParams.set('_popup', '1');
-        }
-
-        const name = utils.addPopupIndex(link.id.replace(/^(change|add|delete|view)_/, ''));
-
-        openModal(href.toString(), name);
+        openModal(url.toString(), name);
     }
 
     /**
@@ -517,15 +512,10 @@
         event.preventDefault();
 
         const link = event.currentTarget;
-        const href = new URL(link.href);
+        const url = utils.ensurePopupParam(link.href);
+        const name = utils.getPopupName(link.id, LOOKUP_PREFIX);
 
-        if (!href.searchParams.has('_popup')) {
-            href.searchParams.set('_popup', '1');
-        }
-
-        const name = utils.addPopupIndex(link.id.replace(/^lookup_/, ''));
-
-        openModal(href.toString(), name);
+        openModal(url.toString(), name);
     }
 
     // ---------------------------------------------------------------
@@ -548,9 +538,7 @@
             // Forward ESC key to parent
             document.addEventListener('keydown', function(e) {
                 if (e.key === 'Escape' || e.keyCode === 27) {
-                    window.parent.postMessage({
-                        type: 'django:modal:close'
-                    }, window.location.origin);
+                    window.parent.postMessage({ type: MSG.MODAL_CLOSE }, window.location.origin);
                 }
             });
         } else {
@@ -563,35 +551,28 @@
     }
 
     /**
-     * Wait for django.jQuery to be available, then initialize
+     * Initialize when django.jQuery is available.
+     * Single-path initialization: poll for django.jQuery, then call init.
      */
-    function waitForJQuery() {
+    function initWhenReady() {
         if (typeof django !== 'undefined' && typeof django.jQuery !== 'undefined') {
-            django.jQuery(document).ready(function() {
-                init(django.jQuery);
-            });
+            init(django.jQuery);
         } else {
-            setTimeout(waitForJQuery, 50);
+            // Poll until django.jQuery is available (Django admin loads it async)
+            setTimeout(initWhenReady, 50);
         }
     }
 
-    // Start waiting for jQuery
+    // Start initialization after DOM is ready
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', waitForJQuery);
+        document.addEventListener('DOMContentLoaded', initWhenReady);
     } else {
-        waitForJQuery();
+        initWhenReady();
     }
 
-    // Expose public API
+    // Expose public API via UnfoldModal namespace
     Modal.open = openModal;
     Modal.close = closeModal;
     Modal.stackDepth = function() { return state.modalStack.length; };
-
-    // Legacy compatibility
-    window.unfoldModal = {
-        open: openModal,
-        close: closeModal,
-        stackDepth: function() { return state.modalStack.length; }
-    };
 
 })(window.UnfoldModal);

@@ -49,7 +49,7 @@ class TestNestedModalStack:
         page.goto(f"{live_server.url}/admin/testapp/venue/add/")
 
         # Stack starts at 0
-        depth = page.evaluate("window.unfoldModal.stackDepth()")
+        depth = page.evaluate("window.UnfoldModal.stackDepth()")
         assert depth == 0
 
         # Open modal A
@@ -57,7 +57,7 @@ class TestNestedModalStack:
         page.wait_for_selector(".unfold-modal-overlay")
         page.wait_for_timeout(300)
 
-        depth = page.evaluate("window.unfoldModal.stackDepth()")
+        depth = page.evaluate("window.UnfoldModal.stackDepth()")
         assert depth == 1
 
         # Open modal B from within A
@@ -66,7 +66,7 @@ class TestNestedModalStack:
         iframe_a.locator("#add_id_country").click()
         page.wait_for_timeout(500)
 
-        depth = page.evaluate("window.unfoldModal.stackDepth()")
+        depth = page.evaluate("window.UnfoldModal.stackDepth()")
         assert depth == 2
 
     def test_close_nested_restores_previous(self, authenticated_page, live_server):
@@ -91,7 +91,7 @@ class TestNestedModalStack:
         page.wait_for_timeout(300)
 
         # Stack should be back to 1
-        depth = page.evaluate("window.unfoldModal.stackDepth()")
+        depth = page.evaluate("window.UnfoldModal.stackDepth()")
         assert depth == 1
 
         # Only one overlay visible now (modal A restored)
@@ -127,7 +127,7 @@ class TestNestedModalStack:
         page.wait_for_timeout(500)
 
         # Stack should be back to 1 (modal A)
-        depth = page.evaluate("window.unfoldModal.stackDepth()")
+        depth = page.evaluate("window.UnfoldModal.stackDepth()")
         assert depth == 1
 
         # Modal A's country select should now have "TestCountry" selected
@@ -187,14 +187,14 @@ class TestNestedModalStack:
         iframe_a.locator("#add_id_country").wait_for(state="visible", timeout=5000)
         iframe_a.locator("#add_id_country").click()
         page.wait_for_timeout(500)
-        assert page.evaluate("window.unfoldModal.stackDepth()") == 2
+        assert page.evaluate("window.UnfoldModal.stackDepth()") == 2
 
         # Click close button of nested modal B
         page.locator(".unfold-modal-close").last.click()
         page.wait_for_timeout(300)
 
         # Only modal B should be closed, A should be restored
-        assert page.evaluate("window.unfoldModal.stackDepth()") == 1
+        assert page.evaluate("window.UnfoldModal.stackDepth()") == 1
         expect(page.locator(".unfold-modal-overlay").first).to_be_visible()
 
     def test_esc_in_nested_iframe_closes_nested_modal(self, authenticated_page, live_server):
@@ -212,7 +212,7 @@ class TestNestedModalStack:
         iframe_a.locator("#add_id_country").wait_for(state="visible", timeout=5000)
         iframe_a.locator("#add_id_country").click()
         page.wait_for_timeout(500)
-        assert page.evaluate("window.unfoldModal.stackDepth()") == 2
+        assert page.evaluate("window.UnfoldModal.stackDepth()") == 2
 
         # Focus on an input inside modal B's iframe, then press ESC
         iframes = page.locator(".unfold-modal-iframe")
@@ -223,7 +223,7 @@ class TestNestedModalStack:
         page.wait_for_timeout(300)
 
         # Only modal B should be closed, A should be restored
-        assert page.evaluate("window.unfoldModal.stackDepth()") == 1
+        assert page.evaluate("window.UnfoldModal.stackDepth()") == 1
         expect(page.locator(".unfold-modal-overlay").first).to_be_visible()
 
     def test_overlay_click_closes_nested_only(self, authenticated_page, live_server):
@@ -241,14 +241,14 @@ class TestNestedModalStack:
         iframe_a.locator("#add_id_country").wait_for(state="visible", timeout=5000)
         iframe_a.locator("#add_id_country").click()
         page.wait_for_timeout(500)
-        assert page.evaluate("window.unfoldModal.stackDepth()") == 2
+        assert page.evaluate("window.UnfoldModal.stackDepth()") == 2
 
         # Click overlay of modal B (top edge)
         page.locator(".unfold-modal-overlay").last.click(position={"x": 10, "y": 10})
         page.wait_for_timeout(300)
 
         # Only modal B closed
-        assert page.evaluate("window.unfoldModal.stackDepth()") == 1
+        assert page.evaluate("window.UnfoldModal.stackDepth()") == 1
 
     def test_scroll_lock_maintained_through_nested(self, authenticated_page, live_server):
         """Scroll lock should remain while any modal is open, even after closing nested."""

@@ -28,6 +28,34 @@ window.UnfoldModal = window.UnfoldModal || {};
     Modal.resizeEnabled = resizeEnabled;
 
     // ---------------------------------------------------------------
+    // Message Type Constants
+    // ---------------------------------------------------------------
+
+    const MSG = {
+        MODAL_OPEN: 'django:modal:open',
+        MODAL_CLOSE: 'django:modal:close',
+        MODAL_DISMISS: 'django:modal:dismiss',
+        POPUP_ADD: 'django:popup:add',
+        POPUP_CHANGE: 'django:popup:change',
+        POPUP_DELETE: 'django:popup:delete',
+        POPUP_LOOKUP: 'django:popup:lookup'
+    };
+
+    Modal.MSG = MSG;
+
+    // ---------------------------------------------------------------
+    // SVG Icons
+    // ---------------------------------------------------------------
+
+    const ICONS = {
+        maximize: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>',
+        restore: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="7" width="14" height="14" rx="2" ry="2"></rect><path d="M9 3h10a2 2 0 0 1 2 2v10"></path></svg>',
+        close: '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>'
+    };
+
+    Modal.ICONS = ICONS;
+
+    // ---------------------------------------------------------------
     // State
     // ---------------------------------------------------------------
 
@@ -157,6 +185,27 @@ window.UnfoldModal = window.UnfoldModal || {};
         return name + '__' + (popupIndex + 1);
     }
 
+    /**
+     * Ensure URL has _popup parameter set.
+     * Returns URL object with _popup=1 added if missing.
+     */
+    function ensurePopupParam(href) {
+        const url = new URL(href);
+        if (!url.searchParams.has('_popup')) {
+            url.searchParams.set('_popup', '1');
+        }
+        return url;
+    }
+
+    /**
+     * Get popup name from link ID by stripping prefix and adding popup index.
+     * @param {string} linkId - The link element's ID
+     * @param {RegExp} prefixPattern - Pattern to strip (e.g., /^(change|add|delete|view)_/)
+     */
+    function getPopupName(linkId, prefixPattern) {
+        return addPopupIndex(linkId.replace(prefixPattern, ''));
+    }
+
     // Expose utilities
     Modal.utils = {
         getActiveModal: getActiveModal,
@@ -164,7 +213,9 @@ window.UnfoldModal = window.UnfoldModal || {};
         unlockScroll: unlockScroll,
         getMaximizeBounds: getMaximizeBounds,
         setPopupIndex: setPopupIndex,
-        addPopupIndex: addPopupIndex
+        addPopupIndex: addPopupIndex,
+        ensurePopupParam: ensurePopupParam,
+        getPopupName: getPopupName
     };
 
     // ---------------------------------------------------------------
@@ -172,7 +223,7 @@ window.UnfoldModal = window.UnfoldModal || {};
     // ---------------------------------------------------------------
 
     /**
-     * Inject CSS styles for dark mode support.
+     * Inject CSS styles for hover effects and dark mode support.
      */
     function injectStyles() {
         if (stylesInjected) return;
@@ -180,6 +231,12 @@ window.UnfoldModal = window.UnfoldModal || {};
 
         const style = document.createElement('style');
         style.textContent = `
+            /* Button hover effects (light mode) - !important needed to override inline styles */
+            .unfold-modal-close:hover,
+            .unfold-modal-maximize:hover {
+                background: var(--unfold-hover-bg, #f3f4f6) !important;
+            }
+
             /* Dark mode support for modal */
             .dark .unfold-modal-container,
             [data-theme="dark"] .unfold-modal-container {
@@ -322,16 +379,12 @@ window.UnfoldModal = window.UnfoldModal || {};
             min-width: 2.5rem;
         `;
 
-        // Maximize button (left side)
+        // Maximize button (left side) - hover handled by CSS
         const maximizeButton = document.createElement('button');
         maximizeButton.type = 'button';
         maximizeButton.className = 'unfold-modal-maximize';
         maximizeButton.title = 'Maximize';
-        maximizeButton.innerHTML = `
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-            </svg>
-        `;
+        maximizeButton.innerHTML = ICONS.maximize;
         maximizeButton.style.cssText = `
             background: none;
             border: none;
@@ -343,12 +396,6 @@ window.UnfoldModal = window.UnfoldModal || {};
             align-items: center;
             justify-content: center;
         `;
-        maximizeButton.addEventListener('mouseenter', function() {
-            this.style.background = 'var(--unfold-hover-bg, #f3f4f6)';
-        });
-        maximizeButton.addEventListener('mouseleave', function() {
-            this.style.background = 'none';
-        });
 
         leftButtonGroup.appendChild(maximizeButton);
 
@@ -377,17 +424,12 @@ window.UnfoldModal = window.UnfoldModal || {};
             min-width: 2.5rem;
         `;
 
-        // Close button (right side)
+        // Close button (right side) - hover handled by CSS
         const closeButton = document.createElement('button');
         closeButton.type = 'button';
         closeButton.className = 'unfold-modal-close';
         closeButton.title = 'Close';
-        closeButton.innerHTML = `
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="18" y1="6" x2="6" y2="18"></line>
-                <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
-        `;
+        closeButton.innerHTML = ICONS.close;
         closeButton.style.cssText = `
             background: none;
             border: none;
@@ -400,12 +442,6 @@ window.UnfoldModal = window.UnfoldModal || {};
             justify-content: center;
         `;
         closeButton.addEventListener('click', closeCallback);
-        closeButton.addEventListener('mouseenter', function() {
-            this.style.background = 'var(--unfold-hover-bg, #f3f4f6)';
-        });
-        closeButton.addEventListener('mouseleave', function() {
-            this.style.background = 'none';
-        });
 
         rightButtonGroup.appendChild(closeButton);
 
