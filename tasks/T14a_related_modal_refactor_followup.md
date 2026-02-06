@@ -46,5 +46,5 @@ Tests to run
 - `pytest --browser chromium` (Playwright UI coverage)
 
 Guidelines (What not to do)
-- Do not reintroduce inline CSS strings (T16 covers CSS refactor).
+- Do not reintroduce inline CSS strings (T17 covers CSS refactor).
 - Do not change modal stack semantics.
