@@ -1,4 +1,4 @@
-# Task T15 - Move Inline Styles to Tailwind CSS
+# Task T16 - Move Inline Styles to Tailwind CSS
 
 Goal
 - Remove inline style strings from modal JS and move styling to Tailwind 4 CSS.

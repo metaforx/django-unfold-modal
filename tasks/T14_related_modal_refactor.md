@@ -42,6 +42,6 @@ Tests to run
 - Add/verify a Playwright assertion for initial modal size vs preset when `UNFOLD_MODAL_RESIZE=True`.
 
 Guidelines (What not to do)
-- Do not reintroduce inline CSS strings (T15 will handle CSS refactor).
+- Do not reintroduce inline CSS strings (T16 will handle CSS refactor).
 - Do not add new dependencies or bundlers.
 - Do not change the modal stack behavior semantics.
