@@ -57,6 +57,9 @@ UNFOLD_MODAL_SIZE = "default"
 
 # Enable manual resize handle on modal (default: False)
 UNFOLD_MODAL_RESIZE = False
+
+# Hide admin header inside modal iframes (default: True)
+UNFOLD_MODAL_DISABLE_HEADER = True
 ```
 
 ### Size Presets

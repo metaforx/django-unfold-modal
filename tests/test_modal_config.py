@@ -54,3 +54,16 @@ class TestModalConfig:
         response = client.get("/unfold-modal/config.js")
         content = response.content.decode()
         assert '"resize": false' in content
+
+    def test_config_js_disable_header_true_by_default(self, client):
+        """Config should have disableHeader true by default."""
+        response = client.get("/unfold-modal/config.js")
+        content = response.content.decode()
+        assert '"disableHeader": true' in content
+
+    @override_settings(UNFOLD_MODAL_DISABLE_HEADER=False)
+    def test_config_js_disable_header_can_be_false(self, client):
+        """Config should allow disableHeader to be set to false."""
+        response = client.get("/unfold-modal/config.js")
+        content = response.content.decode()
+        assert '"disableHeader": false' in content

@@ -17,6 +17,7 @@ def modal_config_js(request):
     """
     size_preset = get_setting("UNFOLD_MODAL_SIZE")
     resize_enabled = get_setting("UNFOLD_MODAL_RESIZE")
+    disable_header = get_setting("UNFOLD_MODAL_DISABLE_HEADER")
 
     # Get dimensions from preset or use default
     presets = DjangoUnfoldModalConfig.SIZE_PRESETS
@@ -26,6 +27,7 @@ def modal_config_js(request):
         "size": size_preset,
         "dimensions": dimensions,
         "resize": resize_enabled,
+        "disableHeader": disable_header,
     }
 
     js_content = f"window.UNFOLD_MODAL_CONFIG = {json.dumps(config)};"

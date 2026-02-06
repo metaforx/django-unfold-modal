@@ -12,6 +12,7 @@
     const utils = Modal.utils;
     const dom = Modal.dom;
     const resizeEnabled = Modal.resizeEnabled;
+    const disableHeader = Modal.disableHeader;
     const MSG = Modal.MSG;
     const ICONS = Modal.ICONS;
 
@@ -197,15 +198,36 @@
             toggleMaximize(modal);
         });
 
-        // Update title when iframe loads
+        // Update title and optionally hide admin header when iframe loads
         iframe.addEventListener('load', function() {
             try {
-                const iframeTitle = iframe.contentDocument.title;
+                const iframeDoc = iframe.contentDocument;
+
+                // Update modal title from iframe document title
+                const iframeTitle = iframeDoc.title;
                 if (iframeTitle) {
                     title.textContent = iframeTitle;
                 }
+
+                // Hide admin header inside iframe if configured
+                if (disableHeader) {
+                    // Find the Unfold header (parent of #header-inner)
+                    const headerInner = iframeDoc.getElementById('header-inner');
+                    if (headerInner) {
+                        const header = headerInner.closest('.border-b');
+                        if (header) {
+                            header.style.display = 'none';
+                        }
+                    }
+
+                    // Add top spacing to the main content container
+                    const mainContent = iframeDoc.getElementById('main');
+                    if (mainContent) {
+                        mainContent.style.paddingTop = '1rem';
+                    }
+                }
             } catch (e) {
-                // Cross-origin – cannot access title
+                // Cross-origin – cannot access iframe content
             }
         });
 
