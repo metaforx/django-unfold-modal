@@ -10,7 +10,6 @@ class DjangoUnfoldModalConfig(AppConfig):
 
     # Default settings
     default_settings = {
-        "UNFOLD_MODAL_ENABLED": True,
         "UNFOLD_MODAL_VARIANT": "iframe",  # Reserved for future "fetch"
         "UNFOLD_MODAL_PRESENTATION": "modal",  # Reserved for future "drawer"
         "UNFOLD_MODAL_SIZE": "default",  # Presets: "default", "large", "full"
