@@ -46,7 +46,7 @@ jobs:
           poetry run playwright install-deps chromium
 
       - name: Run unit tests
-        run: poetry run pytest -q --ignore=tests/test_ui_*.py
+        run: poetry run pytest --ignore=tests/test_ui_*.py -rs
 
       - name: Run Playwright UI tests
-        run: poetry run pytest -q tests/test_ui_*.py --browser chromium
+        run: poetry run pytest tests/test_ui_*.py --browser chromium -rs
