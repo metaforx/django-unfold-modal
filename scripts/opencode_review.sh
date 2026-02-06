@@ -1,14 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-MODEL="${MODEL:-kimi-k2.5}"
+MODEL="${MODEL:-opencode/kimi-k2.5-free}"
 INPUT="$(cat)"
 
-PROMPT=$'You are a strict senior code reviewer.\nReview the following content. Be concise, actionable, and critical.\n'
+PROMPT='You are a strict senior code reviewer. Review the following content. Be concise, actionable, and critical.'
 
-tmpfile="$(mktemp)"
-printf '%s\n\n%s\n' "$PROMPT" "$INPUT" > "$tmpfile"
+opencode run --model "$MODEL" "$PROMPT
 
-opencode run --model "$MODEL" --prompt-file "$tmpfile"
-
-rm -f "$tmpfile"
+$INPUT"
