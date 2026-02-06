@@ -58,6 +58,21 @@ window.UnfoldModal = window.UnfoldModal || {};
     Modal.ICONS = ICONS;
 
     // ---------------------------------------------------------------
+    // Unfold Admin Selectors (stable IDs and structural containers)
+    // ---------------------------------------------------------------
+
+    const SELECTORS = {
+        // Main content container ID
+        MAIN: 'main',
+        // Header inner element ID (used to locate header container)
+        HEADER_INNER: 'header-inner',
+        // Number of levels from HEADER_INNER to the header container div
+        HEADER_CONTAINER_DEPTH: 2
+    };
+
+    Modal.SELECTORS = SELECTORS;
+
+    // ---------------------------------------------------------------
     // State
     // ---------------------------------------------------------------
 

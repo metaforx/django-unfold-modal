@@ -15,6 +15,7 @@
     const disableHeader = Modal.disableHeader;
     const MSG = Modal.MSG;
     const ICONS = Modal.ICONS;
+    const SELECTORS = Modal.SELECTORS;
 
     // Prefix patterns for popup name extraction
     const SHOW_RELATED_PREFIX = /^(change|add|delete|view)_/;
@@ -211,17 +212,25 @@
 
                 // Hide admin header inside iframe if configured
                 if (disableHeader) {
-                    // Find the Unfold header (parent of #header-inner)
-                    const headerInner = iframeDoc.getElementById('header-inner');
+                    // Find the header container by navigating from #header-inner
+                    // Structure: #main > header-container > div > #header-inner
+                    const headerInner = iframeDoc.getElementById(SELECTORS.HEADER_INNER);
                     if (headerInner) {
-                        const header = headerInner.closest('.border-b');
-                        if (header) {
-                            header.style.display = 'none';
+                        // Navigate up to the header container (grandparent)
+                        let headerContainer = headerInner;
+                        for (let i = 0; i < SELECTORS.HEADER_CONTAINER_DEPTH; i++) {
+                            if (headerContainer.parentElement) {
+                                headerContainer = headerContainer.parentElement;
+                            }
+                        }
+                        // Hide the header container
+                        if (headerContainer && headerContainer !== iframeDoc.body) {
+                            headerContainer.style.display = 'none';
                         }
                     }
 
                     // Add top spacing to the main content container
-                    const mainContent = iframeDoc.getElementById('main');
+                    const mainContent = iframeDoc.getElementById(SELECTORS.MAIN);
                     if (mainContent) {
                         mainContent.style.paddingTop = '1rem';
                     }
