@@ -21,11 +21,13 @@ window.UnfoldModal = window.UnfoldModal || {};
         maxHeight: "700px"
     };
     const resizeEnabled = config.resize || false;
+    const disableHeader = config.disableHeader !== false; // Default true
 
     // Expose config
     Modal.config = config;
     Modal.dimensions = dimensions;
     Modal.resizeEnabled = resizeEnabled;
+    Modal.disableHeader = disableHeader;
 
     // ---------------------------------------------------------------
     // Message Type Constants
