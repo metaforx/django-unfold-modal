@@ -8,14 +8,14 @@
 
 /* Loading state for iframe - shows spinner while content loads */
 .unfold-modal-iframe {
-    background: #fff url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%236b7280" stroke-width="2"><circle cx="12" cy="12" r="10" stroke-opacity="0.25"/><path d="M12 2a10 10 0 0 1 10 10" stroke-linecap="round"><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite"/></path></svg>') center center no-repeat;
+    background: var(--color-base-50, #fafafa) url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%236b7280" stroke-width="2"><circle cx="12" cy="12" r="10" stroke-opacity="0.25"/><path d="M12 2a10 10 0 0 1 10 10" stroke-linecap="round"><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite"/></path></svg>') center center no-repeat;
     background-size: 40px 40px;
 }
 
-/* Dark mode loading state - matching Unfold base-900 */
+/* Dark mode loading state - uses Unfold base-900 token */
 .dark .unfold-modal-iframe,
 [data-theme="dark"] .unfold-modal-iframe {
-    background-color: rgb(24, 24, 27);
+    background-color: var(--color-base-900, #18181b);
 }
 
 /* Hide spinner once iframe has content */
