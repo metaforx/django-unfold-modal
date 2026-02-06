@@ -8,8 +8,8 @@ Suggested Skill
 - Review with `$unfold-codex-reviewer`.
 - Optional worker (OpenCode / Qwen 2.5):
   - Use the `opencode` CLI with model `kimi-k2.5` for a lightweight review/execution pass.
-  - Script: `scripts/opencode_review.sh` (pipe input into it).
-  - Example: `git diff | scripts/opencode_review.sh`
+  - Script: `scripts/opencode_coder.sh` (pipe input into it).
+  - Example: `git diff | scripts/opencode_coder.sh`
 
 Workflow (required)
 - Claude orchestrates the subagent run (Opus or OpenCode/Kimi).

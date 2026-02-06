@@ -156,9 +156,6 @@
      * If a modal is already visible it is hidden and pushed down the stack.
      */
     function openModal(url, iframeName) {
-        // Inject dark mode styles on first use
-        Modal.injectStyles();
-
         const currentModal = utils.getActiveModal();
         const modalStack = state.modalStack;
 

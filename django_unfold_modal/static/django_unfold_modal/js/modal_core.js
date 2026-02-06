@@ -89,9 +89,6 @@ window.UnfoldModal = window.UnfoldModal || {};
     let scrollbarWidth = 0;
     let savedScrollStyles = null;
 
-    // CSS injection flag
-    let stylesInjected = false;
-
     // Popup index for nested popups (matches Django's scheme)
     let popupIndex = 0;
 
@@ -236,98 +233,6 @@ window.UnfoldModal = window.UnfoldModal || {};
     };
 
     // ---------------------------------------------------------------
-    // CSS Injection
-    // ---------------------------------------------------------------
-
-    /**
-     * Inject CSS styles for modal buttons, hover effects, and dark mode.
-     * All backgrounds defined in CSS (not inline) so hover works without !important.
-     * Uses Unfold's actual color tokens (--color-base-*) with fallbacks.
-     */
-    function injectStyles() {
-        if (stylesInjected) return;
-        stylesInjected = true;
-
-        const style = document.createElement('style');
-        style.textContent = `
-            /* Modal container - uses Unfold base-50 token with fallback */
-            .unfold-modal-container {
-                background: var(--color-base-50, #fafafa);
-            }
-
-            /* Modal header - uses Unfold base-200 token with fallback */
-            .unfold-modal-header {
-                border-bottom-color: var(--color-base-200, #e4e4e7);
-            }
-
-            /* Modal title - uses Unfold base-700 token with fallback */
-            .unfold-modal-title {
-                color: var(--color-base-700, #3f3f46);
-            }
-
-            /* Modal iframe - uses Unfold base-50 token with fallback */
-            .unfold-modal-iframe {
-                background: var(--color-base-50, #fafafa);
-            }
-
-            /* Modal button base styles - uses Unfold base-500 token */
-            .unfold-modal-close,
-            .unfold-modal-maximize {
-                background: transparent;
-                border: none;
-                cursor: pointer;
-                padding: 0.5rem;
-                color: var(--color-base-500, #71717a);
-                border-radius: 0.25rem;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 1.25rem;
-                line-height: 1;
-            }
-
-            /* Button hover effects (light mode) - uses Unfold base-100 token */
-            .unfold-modal-close:hover,
-            .unfold-modal-maximize:hover {
-                background: var(--color-base-100, #f4f4f5);
-            }
-
-            /* Dark mode support for modal - uses Unfold tokens */
-            .dark .unfold-modal-container,
-            [data-theme="dark"] .unfold-modal-container {
-                background: var(--color-base-900, #18181b);
-            }
-            .dark .unfold-modal-header,
-            [data-theme="dark"] .unfold-modal-header {
-                border-bottom-color: var(--color-base-700, #3f3f46);
-            }
-            .dark .unfold-modal-title,
-            [data-theme="dark"] .unfold-modal-title {
-                color: var(--color-base-100, #f4f4f5);
-            }
-            .dark .unfold-modal-close,
-            .dark .unfold-modal-maximize,
-            [data-theme="dark"] .unfold-modal-close,
-            [data-theme="dark"] .unfold-modal-maximize {
-                color: var(--color-base-400, #a1a1aa);
-            }
-            .dark .unfold-modal-close:hover,
-            .dark .unfold-modal-maximize:hover,
-            [data-theme="dark"] .unfold-modal-close:hover,
-            [data-theme="dark"] .unfold-modal-maximize:hover {
-                background: var(--color-base-800, #27272a);
-            }
-            .dark .unfold-modal-iframe,
-            [data-theme="dark"] .unfold-modal-iframe {
-                background: var(--color-base-900, #18181b);
-            }
-        `;
-        document.head.appendChild(style);
-    }
-
-    Modal.injectStyles = injectStyles;
-
-    // ---------------------------------------------------------------
     // DOM Creation
     // ---------------------------------------------------------------
 
@@ -337,17 +242,7 @@ window.UnfoldModal = window.UnfoldModal || {};
     function createModalOverlay() {
         const overlay = document.createElement('div');
         overlay.className = 'unfold-modal-overlay';
-        overlay.style.cssText = `
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 9999;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            transition: opacity 0.15s ease-out;
-        `;
+        // All styles defined in modal.css
         return overlay;
     }
 
@@ -356,11 +251,14 @@ window.UnfoldModal = window.UnfoldModal || {};
      */
     function createModalContainer() {
         const container = document.createElement('div');
-        container.className = 'unfold-modal-container';
+        // Base styles from modal.css, add resizable class if enabled
+        container.className = resizeEnabled
+            ? 'unfold-modal-container unfold-modal-resizable'
+            : 'unfold-modal-container';
 
         const hasResizeObserver = typeof ResizeObserver !== 'undefined';
 
-        // Calculate initial dimensions
+        // Calculate initial dimensions (must be inline - dynamic from config)
         let initialWidth, initialHeight, maxWidthStyle, maxHeightStyle;
 
         if (resizeEnabled && hasResizeObserver) {
@@ -392,20 +290,12 @@ window.UnfoldModal = window.UnfoldModal || {};
             maxHeightStyle = dimensions.maxHeight;
         }
 
-        container.style.cssText = `
-            border-radius: 0.5rem;
-            width: ${initialWidth};
-            max-width: ${maxWidthStyle};
-            height: ${initialHeight};
-            max-height: ${maxHeightStyle};
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-            transform: scale(0.95);
-            transition: transform 0.15s ease-out;
-            ${resizeEnabled ? 'resize: both;' : ''}
-        `;
+        // Only dynamic dimension styles remain inline
+        container.style.width = initialWidth;
+        container.style.maxWidth = maxWidthStyle;
+        container.style.height = initialHeight;
+        container.style.maxHeight = maxHeightStyle;
+
         return container;
     }
 
@@ -415,26 +305,13 @@ window.UnfoldModal = window.UnfoldModal || {};
     function createModalHeader(closeCallback) {
         const header = document.createElement('div');
         header.className = 'unfold-modal-header';
-        header.style.cssText = `
-            display: flex;
-            align-items: center;
-            padding: 0.5rem;
-            border-bottom-width: 1px;
-            border-bottom-style: solid;
-            flex-shrink: 0;
-            min-height: 2.5rem;
-        `;
+        // All styles defined in modal.css
 
         // Left button group (maximize button)
         const leftButtonGroup = document.createElement('div');
-        leftButtonGroup.style.cssText = `
-            display: flex;
-            align-items: center;
-            flex-shrink: 0;
-            min-width: 2.5rem;
-        `;
+        leftButtonGroup.className = 'unfold-modal-btn-group';
 
-        // Maximize button (left side) - all styles handled by CSS
+        // Maximize button (left side)
         const maximizeButton = document.createElement('button');
         maximizeButton.type = 'button';
         maximizeButton.className = 'unfold-modal-maximize';
@@ -446,28 +323,13 @@ window.UnfoldModal = window.UnfoldModal || {};
         // Title element (centered)
         const title = document.createElement('span');
         title.className = 'unfold-modal-title';
-        title.style.cssText = `
-            flex: 1;
-            text-align: center;
-            font-size: 0.875rem;
-            font-weight: 500;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            padding: 0 0.5rem;
-        `;
         title.textContent = '';
 
         // Right button group (close button)
         const rightButtonGroup = document.createElement('div');
-        rightButtonGroup.style.cssText = `
-            display: flex;
-            align-items: center;
-            flex-shrink: 0;
-            min-width: 2.5rem;
-        `;
+        rightButtonGroup.className = 'unfold-modal-btn-group';
 
-        // Close button (right side) - all styles handled by CSS
+        // Close button (right side)
         const closeButton = document.createElement('button');
         closeButton.type = 'button';
         closeButton.className = 'unfold-modal-close';
@@ -492,11 +354,7 @@ window.UnfoldModal = window.UnfoldModal || {};
         iframe.name = name;
         iframe.src = url;
         iframe.className = 'unfold-modal-iframe';
-        iframe.style.cssText = `
-            flex: 1;
-            width: 100%;
-            border: none;
-        `;
+        // All styles defined in modal.css
         return iframe;
     }
 
