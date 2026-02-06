@@ -3,7 +3,7 @@
 import pytest
 from django.contrib.admin.sites import site as admin_site
 
-from testapp.models import Author, Book, Category, Chapter, Profile, Publisher, Tag
+from testapp.models import Author, Book, Category, Chapter, Publisher, Tag
 
 
 @pytest.mark.django_db
@@ -21,11 +21,6 @@ class TestModelsExist:
     def test_author_model(self):
         author = Author.objects.create(name="Jane Doe")
         assert str(author) == "Jane Doe"
-
-    def test_profile_model(self):
-        author = Author.objects.create(name="John Smith")
-        profile = Profile.objects.create(author=author, bio="A great writer")
-        assert "John Smith" in str(profile)
 
     def test_publisher_model(self):
         publisher = Publisher.objects.create(name="Acme Publishing")
@@ -47,7 +42,7 @@ class TestAdminRegistered:
 
     def test_models_registered(self):
         registered_models = [model.__name__ for model in admin_site._registry.keys()]
-        expected = ["Category", "Tag", "Author", "Profile", "Publisher", "Book", "Chapter"]
+        expected = ["Category", "Tag", "Author", "Publisher", "Book", "Chapter"]
         for model_name in expected:
             assert model_name in registered_models, f"{model_name} not registered"
 
