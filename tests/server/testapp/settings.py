@@ -2,7 +2,7 @@ from os import environ
 from pathlib import Path
 
 from django.core.management.utils import get_random_secret_key
-from django_unfold_modal.utils import get_modal_scripts_with_config
+from django_unfold_modal.utils import get_modal_scripts_with_config, get_modal_styles
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -33,6 +33,9 @@ UNFOLD_MODAL_RESIZE = True
 UNFOLD_MODAL_DISABLE_HEADER = True
 
 UNFOLD = {
+    "STYLES": [
+        *get_modal_styles(),
+    ],
     "SCRIPTS": [
         *get_modal_scripts_with_config(),
     ],
