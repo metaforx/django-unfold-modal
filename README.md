@@ -36,15 +36,36 @@ INSTALLED_APPS = [
 ]
 ```
 
-Add the required scripts to your Unfold configuration in `settings.py`:
+Add the required styles and scripts to your Unfold configuration in `settings.py`:
+
+**Minimal setup:**
 
 ```python
-from django_unfold_modal.utils import get_modal_scripts
+from django_unfold_modal.utils import get_modal_styles, get_modal_scripts
 
 UNFOLD = {
     # ... other unfold settings ...
+    "STYLES": [
+        *get_modal_styles(),
+    ],
     "SCRIPTS": [
         *get_modal_scripts(),
+    ],
+}
+```
+
+**Config-enabled setup** (for custom sizes and resize handle):
+
+```python
+from django_unfold_modal.utils import get_modal_styles, get_modal_scripts_with_config
+
+UNFOLD = {
+    # ... other unfold settings ...
+    "STYLES": [
+        *get_modal_styles(),
+    ],
+    "SCRIPTS": [
+        *get_modal_scripts_with_config(),
     ],
 }
 ```
@@ -85,17 +106,7 @@ urlpatterns = [
 ]
 ```
 
-2. Use `get_modal_scripts_with_config` instead of `get_modal_scripts` in `settings.py`:
-
-```python
-from django_unfold_modal.utils import get_modal_scripts_with_config
-
-UNFOLD = {
-    "SCRIPTS": [
-        *get_modal_scripts_with_config(),
-    ],
-}
-```
+2. Use `get_modal_scripts_with_config` instead of `get_modal_scripts` in your UNFOLD configuration (see Installation section above).
 
 | Preset    | Width | Max Width | Height | Max Height |
 |-----------|-------|-----------|--------|------------|
