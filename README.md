@@ -46,9 +46,6 @@ UNFOLD = {
 The following settings are available (all optional):
 
 ```python
-# Enable/disable modal functionality (default: True)
-UNFOLD_MODAL_ENABLED = True
-
 # Content loading strategy: "iframe" (default, v1 only)
 UNFOLD_MODAL_VARIANT = "iframe"
 
