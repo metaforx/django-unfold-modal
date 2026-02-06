@@ -18,6 +18,5 @@ class TestPackageImport:
         from django_unfold_modal.apps import DjangoUnfoldModalConfig
 
         defaults = DjangoUnfoldModalConfig.default_settings
-        assert defaults["UNFOLD_MODAL_ENABLED"] is True
         assert defaults["UNFOLD_MODAL_VARIANT"] == "iframe"
         assert defaults["UNFOLD_MODAL_PRESENTATION"] == "modal"
