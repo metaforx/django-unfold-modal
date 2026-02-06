@@ -1,7 +1,56 @@
 """Playwright UI tests for dark mode modal styling."""
 
+import re
 import pytest
 from playwright.sync_api import expect
+
+
+def parse_color(color_str):
+    """
+    Parse a CSS color string and return a dict with RGB-like values.
+    Handles both rgb() and oklch() formats.
+
+    For oklch, lightness (L) maps roughly to brightness:
+    - L < 0.3 = dark
+    - L > 0.9 = light
+    """
+    # Try RGB format first
+    rgb_match = re.search(r'rgb\((\d+),\s*(\d+),\s*(\d+)\)', color_str)
+    if rgb_match:
+        r, g, b = int(rgb_match.group(1)), int(rgb_match.group(2)), int(rgb_match.group(3))
+        return {'format': 'rgb', 'r': r, 'g': g, 'b': b, 'lightness': (r + g + b) / 765}
+
+    # Try OKLCH format: oklch(L C H) where L is lightness 0-1
+    oklch_match = re.search(r'oklch\(([\d.]+)\s+([\d.]+)\s+([\d.]+)\)', color_str)
+    if oklch_match:
+        l = float(oklch_match.group(1))
+        return {'format': 'oklch', 'lightness': l}
+
+    return None
+
+
+def is_dark_color(color_str):
+    """Check if a color is dark (low lightness)."""
+    parsed = parse_color(color_str)
+    if not parsed:
+        return False
+    return parsed['lightness'] < 0.3
+
+
+def is_light_color(color_str):
+    """Check if a color is light (high lightness)."""
+    parsed = parse_color(color_str)
+    if not parsed:
+        return False
+    return parsed['lightness'] > 0.9
+
+
+def is_medium_color(color_str):
+    """Check if a color is medium gray (mid lightness)."""
+    parsed = parse_color(color_str)
+    if not parsed:
+        return False
+    return 0.4 < parsed['lightness'] < 0.8
 
 
 @pytest.mark.django_db(transaction=True)
@@ -31,19 +80,9 @@ class TestDarkModeModal:
             }
         """)
 
-        # Unfold base-900 token fallback: rgb(24, 24, 27)
-        # Should be a dark color (low RGB values)
-        # Parse rgb(r, g, b) format
-        assert "rgb" in bg_color
-        # Extract RGB values
-        import re
-        match = re.search(r'rgb\((\d+),\s*(\d+),\s*(\d+)\)', bg_color)
-        assert match, f"Could not parse background color: {bg_color}"
-        r, g, b = int(match.group(1)), int(match.group(2)), int(match.group(3))
-
-        # Dark background should have low RGB values (< 50 each)
-        assert r < 50 and g < 50 and b < 50, \
-            f"Expected dark background, got rgb({r}, {g}, {b})"
+        # Dark background should have low lightness
+        assert is_dark_color(bg_color), \
+            f"Expected dark background, got {bg_color}"
 
     def test_dark_mode_header_border(self, authenticated_page, live_server):
         """Modal header should have dark border in dark mode."""
@@ -67,18 +106,12 @@ class TestDarkModeModal:
             }
         """)
 
-        # Unfold base-700 token fallback: rgb(63, 63, 70)
-        # Should be darker than light mode border
-        assert "rgb" in border_color
-        import re
-        match = re.search(r'rgb\((\d+),\s*(\d+),\s*(\d+)\)', border_color)
-        assert match, f"Could not parse border color: {border_color}"
-        r, g, b = int(match.group(1)), int(match.group(2)), int(match.group(3))
-
-        # Dark border should have lower values than light mode (229, 231, 235)
-        # base-700 is around (63, 63, 70)
-        assert r < 100 and g < 100 and b < 100, \
-            f"Expected dark border, got rgb({r}, {g}, {b})"
+        # Dark border should have low-medium lightness (darker than light mode)
+        parsed = parse_color(border_color)
+        assert parsed, f"Could not parse border color: {border_color}"
+        # base-700 is a medium-dark gray
+        assert parsed['lightness'] < 0.5, \
+            f"Expected dark border, got {border_color}"
 
     def test_dark_mode_title_color(self, authenticated_page, live_server):
         """Modal title should have light color in dark mode."""
@@ -102,17 +135,9 @@ class TestDarkModeModal:
             }
         """)
 
-        # Unfold base-100 token fallback: rgb(244, 244, 245)
-        # Should be a light color (high RGB values)
-        assert "rgb" in text_color
-        import re
-        match = re.search(r'rgb\((\d+),\s*(\d+),\s*(\d+)\)', text_color)
-        assert match, f"Could not parse text color: {text_color}"
-        r, g, b = int(match.group(1)), int(match.group(2)), int(match.group(3))
-
-        # Light text should have high RGB values (> 200 each)
-        assert r > 200 and g > 200 and b > 200, \
-            f"Expected light text, got rgb({r}, {g}, {b})"
+        # Light text should have high lightness
+        assert is_light_color(text_color), \
+            f"Expected light text, got {text_color}"
 
     def test_dark_mode_button_hover(self, authenticated_page, live_server):
         """Modal buttons should have correct hover color in dark mode."""
@@ -128,7 +153,7 @@ class TestDarkModeModal:
         close_btn = page.locator(".unfold-modal-close")
         expect(close_btn).to_be_visible()
 
-        # Get button color (should be base-400 in dark mode)
+        # Get button color (should be base-400 in dark mode - medium gray)
         btn_color = page.evaluate("""
             () => {
                 const btn = document.querySelector('.unfold-modal-close');
@@ -136,17 +161,9 @@ class TestDarkModeModal:
             }
         """)
 
-        # Unfold base-400 token fallback: rgb(161, 161, 170)
-        # Should be a medium gray
-        assert "rgb" in btn_color
-        import re
-        match = re.search(r'rgb\((\d+),\s*(\d+),\s*(\d+)\)', btn_color)
-        assert match, f"Could not parse button color: {btn_color}"
-        r, g, b = int(match.group(1)), int(match.group(2)), int(match.group(3))
-
-        # Medium gray should be around 150-180
-        assert 100 < r < 200 and 100 < g < 200 and 100 < b < 200, \
-            f"Expected medium gray button, got rgb({r}, {g}, {b})"
+        # Medium gray should have mid lightness
+        assert is_medium_color(btn_color), \
+            f"Expected medium gray button, got {btn_color}"
 
     def test_light_mode_baseline(self, authenticated_page, live_server):
         """Sanity check: light mode should have light background."""
@@ -170,13 +187,6 @@ class TestDarkModeModal:
             }
         """)
 
-        # Light mode should be white or near-white
-        assert "rgb" in bg_color
-        import re
-        match = re.search(r'rgb\((\d+),\s*(\d+),\s*(\d+)\)', bg_color)
-        assert match, f"Could not parse background color: {bg_color}"
-        r, g, b = int(match.group(1)), int(match.group(2)), int(match.group(3))
-
-        # White is rgb(255, 255, 255)
-        assert r > 240 and g > 240 and b > 240, \
-            f"Expected light background, got rgb({r}, {g}, {b})"
+        # Light mode should have high lightness (near white)
+        assert is_light_color(bg_color), \
+            f"Expected light background, got {bg_color}"

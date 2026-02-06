@@ -233,34 +233,34 @@ window.UnfoldModal = window.UnfoldModal || {};
 
         const style = document.createElement('style');
         style.textContent = `
-            /* Modal container - light mode default */
+            /* Modal container - uses Unfold base-50 token with fallback */
             .unfold-modal-container {
-                background: #fff;
+                background: var(--color-base-50, #fafafa);
             }
 
-            /* Modal header - light mode default */
+            /* Modal header - uses Unfold base-200 token with fallback */
             .unfold-modal-header {
-                border-bottom-color: rgb(229, 231, 235);
+                border-bottom-color: var(--color-base-200, #e4e4e7);
             }
 
-            /* Modal title - light mode default */
+            /* Modal title - uses Unfold base-700 token with fallback */
             .unfold-modal-title {
-                color: rgb(55, 65, 81);
+                color: var(--color-base-700, #3f3f46);
             }
 
-            /* Modal iframe - light mode default */
+            /* Modal iframe - uses Unfold base-50 token with fallback */
             .unfold-modal-iframe {
-                background: #fff;
+                background: var(--color-base-50, #fafafa);
             }
 
-            /* Modal button base styles - matching Unfold base-500 */
+            /* Modal button base styles - uses Unfold base-500 token */
             .unfold-modal-close,
             .unfold-modal-maximize {
                 background: transparent;
                 border: none;
                 cursor: pointer;
                 padding: 0.5rem;
-                color: rgb(107, 114, 128);
+                color: var(--color-base-500, #71717a);
                 border-radius: 0.25rem;
                 display: flex;
                 align-items: center;
@@ -269,40 +269,40 @@ window.UnfoldModal = window.UnfoldModal || {};
                 line-height: 1;
             }
 
-            /* Button hover effects (light mode) - matching Unfold base-100 */
+            /* Button hover effects (light mode) - uses Unfold base-100 token */
             .unfold-modal-close:hover,
             .unfold-modal-maximize:hover {
-                background: rgb(243, 244, 246);
+                background: var(--color-base-100, #f4f4f5);
             }
 
-            /* Dark mode support for modal - matching Unfold tokens */
+            /* Dark mode support for modal - uses Unfold tokens */
             .dark .unfold-modal-container,
             [data-theme="dark"] .unfold-modal-container {
-                background: rgb(24, 24, 27); /* Unfold base-900 */
+                background: var(--color-base-900, #18181b);
             }
             .dark .unfold-modal-header,
             [data-theme="dark"] .unfold-modal-header {
-                border-bottom-color: rgb(63, 63, 70); /* Unfold base-700 */
+                border-bottom-color: var(--color-base-700, #3f3f46);
             }
             .dark .unfold-modal-title,
             [data-theme="dark"] .unfold-modal-title {
-                color: rgb(244, 244, 245); /* Unfold base-100 */
+                color: var(--color-base-100, #f4f4f5);
             }
             .dark .unfold-modal-close,
             .dark .unfold-modal-maximize,
             [data-theme="dark"] .unfold-modal-close,
             [data-theme="dark"] .unfold-modal-maximize {
-                color: rgb(161, 161, 170); /* Unfold base-400 */
+                color: var(--color-base-400, #a1a1aa);
             }
             .dark .unfold-modal-close:hover,
             .dark .unfold-modal-maximize:hover,
             [data-theme="dark"] .unfold-modal-close:hover,
             [data-theme="dark"] .unfold-modal-maximize:hover {
-                background: rgb(39, 39, 42); /* Unfold base-800 */
+                background: var(--color-base-800, #27272a);
             }
             .dark .unfold-modal-iframe,
             [data-theme="dark"] .unfold-modal-iframe {
-                background: rgb(24, 24, 27); /* Unfold base-900 */
+                background: var(--color-base-900, #18181b);
             }
         `;
         document.head.appendChild(style);
