@@ -6,6 +6,16 @@ Goal
 Suggested Skill
 - Use `$unfold-dev-advanced` (Opus).
 - Review with `$unfold-codex-reviewer`.
+- Optional worker (OpenCode / Qwen 2.5):
+  - Use the `opencode` CLI with model `kimi-k2.5` for a lightweight review/execution pass.
+  - Script: `scripts/opencode_review.sh` (pipe input into it).
+  - Example: `git diff | scripts/opencode_review.sh`
+
+Workflow (required)
+- Claude orchestrates the subagent run (Opus or OpenCode/Kimi).
+- Claude verifies the outcome against acceptance criteria.
+- Run Codex CLI review (`$unfold-codex-reviewer`) and fix findings before merge.
+- Do not merge automatically; hold on the feature branch for manual review.
 
 Scope
 - Replace JS `style.cssText` usage with CSS classes.
