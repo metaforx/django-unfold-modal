@@ -1,4 +1,4 @@
-# Task T16 - Drawer Presentation Mode
+# Task T17 - Drawer Presentation Mode
 
 Goal
 - Add opt-in drawer presentation using existing JS/CSS only.
