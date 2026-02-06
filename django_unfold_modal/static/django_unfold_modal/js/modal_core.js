@@ -225,7 +225,7 @@ window.UnfoldModal = window.UnfoldModal || {};
     /**
      * Inject CSS styles for modal buttons, hover effects, and dark mode.
      * All backgrounds defined in CSS (not inline) so hover works without !important.
-     * CSS variables preserved for theme customization.
+     * Uses Unfold's actual color tokens (--color-base-*) with fallbacks.
      */
     function injectStyles() {
         if (stylesInjected) return;
@@ -233,14 +233,34 @@ window.UnfoldModal = window.UnfoldModal || {};
 
         const style = document.createElement('style');
         style.textContent = `
-            /* Modal button base styles - using CSS variables for theming */
+            /* Modal container - light mode default */
+            .unfold-modal-container {
+                background: #fff;
+            }
+
+            /* Modal header - light mode default */
+            .unfold-modal-header {
+                border-bottom-color: rgb(229, 231, 235);
+            }
+
+            /* Modal title - light mode default */
+            .unfold-modal-title {
+                color: rgb(55, 65, 81);
+            }
+
+            /* Modal iframe - light mode default */
+            .unfold-modal-iframe {
+                background: #fff;
+            }
+
+            /* Modal button base styles - matching Unfold base-500 */
             .unfold-modal-close,
             .unfold-modal-maximize {
                 background: transparent;
                 border: none;
                 cursor: pointer;
                 padding: 0.5rem;
-                color: var(--unfold-text-color, #6b7280);
+                color: rgb(107, 114, 128);
                 border-radius: 0.25rem;
                 display: flex;
                 align-items: center;
@@ -249,40 +269,40 @@ window.UnfoldModal = window.UnfoldModal || {};
                 line-height: 1;
             }
 
-            /* Button hover effects (light mode) */
+            /* Button hover effects (light mode) - matching Unfold base-100 */
             .unfold-modal-close:hover,
             .unfold-modal-maximize:hover {
-                background: var(--unfold-hover-bg, #f3f4f6);
+                background: rgb(243, 244, 246);
             }
 
-            /* Dark mode support for modal */
+            /* Dark mode support for modal - matching Unfold tokens */
             .dark .unfold-modal-container,
             [data-theme="dark"] .unfold-modal-container {
-                background: var(--unfold-bg-color, #1f2937);
+                background: rgb(24, 24, 27); /* Unfold base-900 */
             }
             .dark .unfold-modal-header,
             [data-theme="dark"] .unfold-modal-header {
-                border-bottom-color: var(--unfold-border-color, #374151);
+                border-bottom-color: rgb(63, 63, 70); /* Unfold base-700 */
             }
             .dark .unfold-modal-title,
             [data-theme="dark"] .unfold-modal-title {
-                color: var(--unfold-text-color, #f3f4f6);
+                color: rgb(244, 244, 245); /* Unfold base-100 */
             }
             .dark .unfold-modal-close,
             .dark .unfold-modal-maximize,
             [data-theme="dark"] .unfold-modal-close,
             [data-theme="dark"] .unfold-modal-maximize {
-                color: var(--unfold-text-color, #9ca3af);
+                color: rgb(161, 161, 170); /* Unfold base-400 */
             }
             .dark .unfold-modal-close:hover,
             .dark .unfold-modal-maximize:hover,
             [data-theme="dark"] .unfold-modal-close:hover,
             [data-theme="dark"] .unfold-modal-maximize:hover {
-                background: var(--unfold-hover-bg, #374151);
+                background: rgb(39, 39, 42); /* Unfold base-800 */
             }
             .dark .unfold-modal-iframe,
             [data-theme="dark"] .unfold-modal-iframe {
-                background: var(--unfold-bg-color, #1f2937);
+                background: rgb(24, 24, 27); /* Unfold base-900 */
             }
         `;
         document.head.appendChild(style);
@@ -356,8 +376,7 @@ window.UnfoldModal = window.UnfoldModal || {};
         }
 
         container.style.cssText = `
-            background: var(--unfold-bg-color, #fff);
-            border-radius: var(--unfold-border-radius, 0.5rem);
+            border-radius: 0.5rem;
             width: ${initialWidth};
             max-width: ${maxWidthStyle};
             height: ${initialHeight};
@@ -383,7 +402,8 @@ window.UnfoldModal = window.UnfoldModal || {};
             display: flex;
             align-items: center;
             padding: 0.5rem;
-            border-bottom: 1px solid var(--unfold-border-color, #e5e7eb);
+            border-bottom-width: 1px;
+            border-bottom-style: solid;
             flex-shrink: 0;
             min-height: 2.5rem;
         `;
@@ -414,7 +434,6 @@ window.UnfoldModal = window.UnfoldModal || {};
             text-align: center;
             font-size: 0.875rem;
             font-weight: 500;
-            color: var(--unfold-text-color, #374151);
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
@@ -460,7 +479,6 @@ window.UnfoldModal = window.UnfoldModal || {};
             flex: 1;
             width: 100%;
             border: none;
-            background: var(--unfold-bg-color, #fff);
         `;
         return iframe;
     }
