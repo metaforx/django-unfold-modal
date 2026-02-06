@@ -4,6 +4,31 @@ from django.templatetags.static import static
 from django.urls import reverse
 
 
+def get_modal_styles():
+    """
+    Return a list of style callables for the modal CSS file.
+
+    This is the single source of truth for modal stylesheet paths. Use this in
+    UNFOLD["STYLES"] configuration.
+
+    Returns:
+        list: List of callables matching Unfold's STYLES format.
+              Each callable takes a request and returns a static URL.
+
+    Example:
+        from django_unfold_modal.utils import get_modal_styles
+
+        UNFOLD = {
+            "STYLES": [
+                *get_modal_styles(),
+            ],
+        }
+    """
+    return [
+        lambda request: static("django_unfold_modal/css/modal.css"),
+    ]
+
+
 def get_modal_scripts():
     """
     Return a list of script callables for the modal JavaScript files.
