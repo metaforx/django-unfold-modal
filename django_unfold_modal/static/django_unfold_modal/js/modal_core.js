@@ -44,13 +44,13 @@ window.UnfoldModal = window.UnfoldModal || {};
     Modal.MSG = MSG;
 
     // ---------------------------------------------------------------
-    // SVG Icons
+    // Material Symbols Icons (matching Unfold's icon pattern)
     // ---------------------------------------------------------------
 
     const ICONS = {
-        maximize: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>',
-        restore: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="7" width="14" height="14" rx="2" ry="2"></rect><path d="M9 3h10a2 2 0 0 1 2 2v10"></path></svg>',
-        close: '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>'
+        maximize: '<span class="material-symbols-outlined">open_in_full</span>',
+        restore: '<span class="material-symbols-outlined">close_fullscreen</span>',
+        close: '<span class="material-symbols-outlined">close</span>'
     };
 
     Modal.ICONS = ICONS;
@@ -223,7 +223,9 @@ window.UnfoldModal = window.UnfoldModal || {};
     // ---------------------------------------------------------------
 
     /**
-     * Inject CSS styles for hover effects and dark mode support.
+     * Inject CSS styles for modal buttons, hover effects, and dark mode.
+     * All backgrounds defined in CSS (not inline) so hover works without !important.
+     * CSS variables preserved for theme customization.
      */
     function injectStyles() {
         if (stylesInjected) return;
@@ -231,10 +233,26 @@ window.UnfoldModal = window.UnfoldModal || {};
 
         const style = document.createElement('style');
         style.textContent = `
-            /* Button hover effects (light mode) - !important needed to override inline styles */
+            /* Modal button base styles - using CSS variables for theming */
+            .unfold-modal-close,
+            .unfold-modal-maximize {
+                background: transparent;
+                border: none;
+                cursor: pointer;
+                padding: 0.5rem;
+                color: var(--unfold-text-color, #6b7280);
+                border-radius: 0.25rem;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 1.25rem;
+                line-height: 1;
+            }
+
+            /* Button hover effects (light mode) */
             .unfold-modal-close:hover,
             .unfold-modal-maximize:hover {
-                background: var(--unfold-hover-bg, #f3f4f6) !important;
+                background: var(--unfold-hover-bg, #f3f4f6);
             }
 
             /* Dark mode support for modal */
@@ -260,7 +278,7 @@ window.UnfoldModal = window.UnfoldModal || {};
             .dark .unfold-modal-maximize:hover,
             [data-theme="dark"] .unfold-modal-close:hover,
             [data-theme="dark"] .unfold-modal-maximize:hover {
-                background: var(--unfold-hover-bg, #374151) !important;
+                background: var(--unfold-hover-bg, #374151);
             }
             .dark .unfold-modal-iframe,
             [data-theme="dark"] .unfold-modal-iframe {
@@ -379,23 +397,12 @@ window.UnfoldModal = window.UnfoldModal || {};
             min-width: 2.5rem;
         `;
 
-        // Maximize button (left side) - hover handled by CSS
+        // Maximize button (left side) - all styles handled by CSS
         const maximizeButton = document.createElement('button');
         maximizeButton.type = 'button';
         maximizeButton.className = 'unfold-modal-maximize';
         maximizeButton.title = 'Maximize';
         maximizeButton.innerHTML = ICONS.maximize;
-        maximizeButton.style.cssText = `
-            background: none;
-            border: none;
-            cursor: pointer;
-            padding: 0.5rem;
-            color: var(--unfold-text-color, #6b7280);
-            border-radius: 0.25rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        `;
 
         leftButtonGroup.appendChild(maximizeButton);
 
@@ -424,23 +431,12 @@ window.UnfoldModal = window.UnfoldModal || {};
             min-width: 2.5rem;
         `;
 
-        // Close button (right side) - hover handled by CSS
+        // Close button (right side) - all styles handled by CSS
         const closeButton = document.createElement('button');
         closeButton.type = 'button';
         closeButton.className = 'unfold-modal-close';
         closeButton.title = 'Close';
         closeButton.innerHTML = ICONS.close;
-        closeButton.style.cssText = `
-            background: none;
-            border: none;
-            cursor: pointer;
-            padding: 0.5rem;
-            color: var(--unfold-text-color, #6b7280);
-            border-radius: 0.25rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        `;
         closeButton.addEventListener('click', closeCallback);
 
         rightButtonGroup.appendChild(closeButton);
