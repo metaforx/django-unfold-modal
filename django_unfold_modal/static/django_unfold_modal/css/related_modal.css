@@ -3,33 +3,22 @@
  *
  * Minimal CSS for modal customization.
  * Most styles are inline in JS for encapsulation.
- * This file provides CSS custom property overrides.
+ * This file provides loading spinner for iframe.
  */
 
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-    .unfold-modal-container {
-        --unfold-bg-color: #1f2937;
-        --unfold-border-color: #374151;
-        --unfold-text-color: #9ca3af;
-        --unfold-hover-bg: #374151;
-    }
-}
-
-/* Unfold dark mode class support */
-.dark .unfold-modal-container {
-    --unfold-bg-color: #1f2937;
-    --unfold-border-color: #374151;
-    --unfold-text-color: #9ca3af;
-    --unfold-hover-bg: #374151;
-}
-
-/* Loading state for iframe */
+/* Loading state for iframe - shows spinner while content loads */
 .unfold-modal-iframe {
-    background: var(--unfold-bg-color, #fff) url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%236b7280" stroke-width="2"><circle cx="12" cy="12" r="10" stroke-opacity="0.25"/><path d="M12 2a10 10 0 0 1 10 10" stroke-linecap="round"><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite"/></path></svg>') center center no-repeat;
+    background: #fff url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%236b7280" stroke-width="2"><circle cx="12" cy="12" r="10" stroke-opacity="0.25"/><path d="M12 2a10 10 0 0 1 10 10" stroke-linecap="round"><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite"/></path></svg>') center center no-repeat;
     background-size: 40px 40px;
 }
 
+/* Dark mode loading state - matching Unfold base-900 */
+.dark .unfold-modal-iframe,
+[data-theme="dark"] .unfold-modal-iframe {
+    background-color: rgb(24, 24, 27);
+}
+
+/* Hide spinner once iframe has content */
 .unfold-modal-iframe:not([src=""]) {
     background-image: none;
 }
