@@ -132,6 +132,15 @@ pytest --browser chromium
 
 See `tests/README.md` for the test app overview and Playwright scope.
 
+## CI
+
+GitHub Actions runs on all PRs and pushes to `main`/`development`:
+
+- Unit tests across Python 3.10, 3.11, 3.12
+- Playwright UI tests with Chromium
+
+Configure branch protection to require the CI check to pass before merging.
+
 ## License
 
 MIT
