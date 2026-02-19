@@ -1,4 +1,4 @@
-# unfold-modal
+# django-unfold-modal
 
 Modal-based related-object popups for [django-unfold](https://github.com/unfoldadmin/django-unfold).
 
@@ -35,8 +35,10 @@ Adding a more modern and user-friendly interface for related-object felt like a 
 ## Installation
 
 ```bash
-pip install unfold-modal
+pip install django-unfold-modal
 ```
+
+> **Naming:** Install name is `django-unfold-modal`, import/app name is `unfold_modal` — mirroring the `django-unfold` / `unfold` pattern.
 
 Add to your `INSTALLED_APPS` after `unfold`:
 

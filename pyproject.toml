@@ -1,5 +1,5 @@
 [project]
-name = "unfold-modal"
+name = "django-unfold-modal"
 version = "0.1.0"
 description = "Modal-based related-object popups for django-unfold"
 readme = "README.md"
@@ -37,7 +37,7 @@ packages = ["unfold_modal"]
 
 # Poetry for dependency management (dev/test)
 [tool.poetry]
-name = "unfold-modal"
+name = "django-unfold-modal"
 version = "0.1.0"
 description = "Modal-based related-object popups for django-unfold"
 package-mode = false
