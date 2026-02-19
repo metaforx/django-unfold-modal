@@ -1,0 +1,165 @@
+/**
+ * Django Unfold Modal - Stylesheet
+ *
+ * All modal component styles extracted from inline JS.
+ * Uses Unfold's CSS variable tokens for theme consistency.
+ * Supports light/dark mode via .dark class or data-theme attribute.
+ */
+
+/* ---------------------------------------------------------------
+ * CSS Custom Properties (defaults, can be overridden)
+ * --------------------------------------------------------------- */
+:root {
+    --unfold-modal-z-index: 9999;
+    --unfold-modal-backdrop: rgba(0, 0, 0, 0.5);
+    --unfold-modal-transition-duration: 150ms;
+    --unfold-modal-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+/* ---------------------------------------------------------------
+ * Modal Overlay
+ * --------------------------------------------------------------- */
+.unfold-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: var(--unfold-modal-backdrop);
+    z-index: var(--unfold-modal-z-index);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity var(--unfold-modal-transition-duration) ease-out;
+}
+
+/* ---------------------------------------------------------------
+ * Modal Container
+ * --------------------------------------------------------------- */
+.unfold-modal-container {
+    border-radius: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: var(--unfold-modal-shadow);
+    transform: scale(0.95);
+    transition: transform var(--unfold-modal-transition-duration) ease-out;
+    /* Background uses Unfold token with fallback */
+    background: var(--color-base-50, #fafafa);
+}
+
+/* Resize enabled variant */
+.unfold-modal-container.unfold-modal-resizable {
+    resize: both;
+}
+
+/* Dark mode container */
+.dark .unfold-modal-container,
+[data-theme="dark"] .unfold-modal-container {
+    background: var(--color-base-900, #18181b);
+}
+
+/* ---------------------------------------------------------------
+ * Modal Header
+ * --------------------------------------------------------------- */
+.unfold-modal-header {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem;
+    border-bottom-width: 1px;
+    border-bottom-style: solid;
+    border-bottom-color: var(--color-base-200, #e4e4e7);
+    flex-shrink: 0;
+    min-height: 2.5rem;
+}
+
+/* Dark mode header */
+.dark .unfold-modal-header,
+[data-theme="dark"] .unfold-modal-header {
+    border-bottom-color: var(--color-base-700, #3f3f46);
+}
+
+/* ---------------------------------------------------------------
+ * Header Button Groups (left and right)
+ * --------------------------------------------------------------- */
+.unfold-modal-btn-group {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    min-width: 2.5rem;
+}
+
+/* ---------------------------------------------------------------
+ * Modal Title
+ * --------------------------------------------------------------- */
+.unfold-modal-title {
+    flex: 1;
+    text-align: center;
+    font-size: 0.875rem;
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding: 0 0.5rem;
+    color: var(--color-base-700, #3f3f46);
+}
+
+/* Dark mode title */
+.dark .unfold-modal-title,
+[data-theme="dark"] .unfold-modal-title {
+    color: var(--color-base-100, #f4f4f5);
+}
+
+/* ---------------------------------------------------------------
+ * Modal Buttons (close, maximize)
+ * --------------------------------------------------------------- */
+.unfold-modal-close,
+.unfold-modal-maximize {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem;
+    color: var(--color-base-500, #71717a);
+    border-radius: 0.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    line-height: 1;
+}
+
+/* Button hover effects (light mode) */
+.unfold-modal-close:hover,
+.unfold-modal-maximize:hover {
+    background: var(--color-base-100, #f4f4f5);
+}
+
+/* Dark mode buttons */
+.dark .unfold-modal-close,
+.dark .unfold-modal-maximize,
+[data-theme="dark"] .unfold-modal-close,
+[data-theme="dark"] .unfold-modal-maximize {
+    color: var(--color-base-400, #a1a1aa);
+}
+
+/* Dark mode button hover */
+.dark .unfold-modal-close:hover,
+.dark .unfold-modal-maximize:hover,
+[data-theme="dark"] .unfold-modal-close:hover,
+[data-theme="dark"] .unfold-modal-maximize:hover {
+    background: var(--color-base-800, #27272a);
+}
+
+/* ---------------------------------------------------------------
+ * Modal Iframe
+ * --------------------------------------------------------------- */
+.unfold-modal-iframe {
+    flex: 1;
+    width: 100%;
+    border: none;
+    background: var(--color-base-50, #fafafa);
+}
+
+/* Dark mode iframe */
+.dark .unfold-modal-iframe,
+[data-theme="dark"] .unfold-modal-iframe {
+    background: var(--color-base-900, #18181b);
+}

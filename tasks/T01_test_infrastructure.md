@@ -29,8 +29,8 @@ Acceptance Criteria
 - Test project can start via `python manage.py runserver` with Unfold enabled.
 
 Tests to run
-- `pytest -q`
+- `poetry install --with test,dev`
+- `poetry shell` → `pytest -q`
 
 Notes
 - If Playwright needs browser installs, request escalated permissions only when required.
-
