@@ -1,8 +1,18 @@
+![Unfold modal preview](docs/images/unfold-modal.png)
 # django-unfold-modal
+[![CI](https://github.com/metaforx/django-unfold-modal/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/metaforx/django-unfold-modal/actions/workflows/ci.yml)
 
 Modal-based related-object popups for [django-unfold](https://github.com/unfoldadmin/django-unfold).
 
 Replaces Django admin's popup windows for related objects (ForeignKey, ManyToMany, etc.) with Unfold-styled modals.
+
+## Features
+- Modal replacement for admin related-object popups
+- Supports nested modals (replace/restore behavior)
+- Raw ID lookup + autocomplete + inline related fields
+- Optional modal resize + size presets
+- Optional admin header suppression inside iframe
+- Stylable using Unfold theme configuration & custom CSS
 
 ## Motivation
 As much as I love the Django admin interface, I have always found its related-object pop-ups clunky and outdated. 
@@ -18,13 +28,6 @@ Adding a more modern and user-friendly interface for related-object felt like a 
 >
 > If interested in the process, see plans, tasks and reviews folder to get an idea of how the package was developed.
 
-## Features
-- Modal replacement for admin related-object popups
-- Supports nested modals (replace/restore behavior)
-- Raw ID lookup + autocomplete + inline related fields
-- Optional modal resize + size presets
-- Optional admin header suppression inside iframe
-- Stylable using Unfold theme configuration & custom CSS
 
 ## Requirements
 
