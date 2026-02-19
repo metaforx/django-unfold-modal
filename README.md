@@ -1,4 +1,4 @@
-# django-unfold-modal
+# unfold-modal
 
 Modal-based related-object popups for [django-unfold](https://github.com/unfoldadmin/django-unfold).
 
@@ -35,7 +35,7 @@ Adding a more modern and user-friendly interface for related-object felt like a 
 ## Installation
 
 ```bash
-pip install django-unfold-modal
+pip install unfold-modal
 ```
 
 Add to your `INSTALLED_APPS` after `unfold`:
@@ -44,7 +44,7 @@ Add to your `INSTALLED_APPS` after `unfold`:
 INSTALLED_APPS = [
     "unfold",
     "unfold.contrib.filters",
-    "django_unfold_modal",  # Add after unfold, before django.contrib.admin
+    "unfold_modal",  # Add after unfold, before django.contrib.admin
     "django.contrib.admin",
     # ...
 ]
@@ -55,7 +55,7 @@ Add the required styles and scripts to your Unfold configuration in `settings.py
 **Minimal setup:**
 
 ```python
-from django_unfold_modal.utils import get_modal_styles, get_modal_scripts
+from unfold_modal.utils import get_modal_styles, get_modal_scripts
 
 UNFOLD = {
     # ... other unfold settings ...
@@ -71,7 +71,7 @@ UNFOLD = {
 **Config-enabled setup** (for custom sizes and resize handle):
 
 ```python
-from django_unfold_modal.utils import get_modal_styles, get_modal_scripts_with_config
+from unfold_modal.utils import get_modal_styles, get_modal_scripts_with_config
 
 UNFOLD = {
     # ... other unfold settings ...
@@ -116,7 +116,7 @@ from django.urls import include, path
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("unfold-modal/", include("django_unfold_modal.urls")),
+    path("unfold-modal/", include("unfold_modal.urls")),
 ]
 ```
 

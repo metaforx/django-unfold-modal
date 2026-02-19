@@ -2,7 +2,7 @@ from os import environ
 from pathlib import Path
 
 from django.core.management.utils import get_random_secret_key
-from django_unfold_modal.utils import get_modal_scripts_with_config, get_modal_styles
+from unfold_modal.utils import get_modal_scripts_with_config, get_modal_styles
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -17,7 +17,7 @@ USE_TZ = True
 INSTALLED_APPS = [
     "unfold",
     "unfold.contrib.filters",
-    "django_unfold_modal",
+    "unfold_modal",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",

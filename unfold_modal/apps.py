@@ -2,11 +2,11 @@ from django.apps import AppConfig
 from django.conf import settings
 
 
-class DjangoUnfoldModalConfig(AppConfig):
-    """AppConfig for django-unfold-modal."""
+class UnfoldModalConfig(AppConfig):
+    """AppConfig for unfold-modal."""
 
-    name = "django_unfold_modal"
-    verbose_name = "Django Unfold Modal"
+    name = "unfold_modal"
+    verbose_name = "Unfold Modal"
 
     # Default settings
     default_settings = {
@@ -27,13 +27,13 @@ class DjangoUnfoldModalConfig(AppConfig):
 
 def get_setting(name):
     """
-    Get a django-unfold-modal setting with fallback to default.
+    Get an unfold-modal setting with fallback to default.
 
     Args:
-        name: The setting name (e.g., "UNFOLD_MODAL_ENABLED")
+        name: The setting name (e.g., "UNFOLD_MODAL_SIZE")
 
     Returns:
         The setting value from Django settings, or the default value if not set.
     """
-    default_value = DjangoUnfoldModalConfig.default_settings.get(name)
+    default_value = UnfoldModalConfig.default_settings.get(name)
     return getattr(settings, name, default_value)
