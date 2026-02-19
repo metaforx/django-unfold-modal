@@ -22,7 +22,7 @@ It’s fine for straightforward admin use, but when exposed to users, it often c
 [Django Unfold](https://github.com/unfoldadmin/django-unfold) greatly improves the admin’s UX for regular users.
 This package modernizes related-object interactions while following Unfold’s design principles.
 
-> **AI Disclaimer:** My goal was to research agentic capabilities in the development process of this package. All code was intentionally written by AI using structured, automated agent orchestration, including development and review by different models (Claude CLI Sonnet/Opus & Codex CLI), result verification, and regression testing.
+> **AI Disclaimer:** Beyond the practical use of the package, the project was also driven by the incentive to explore AI-assisted research and development. All code was intentionally written by AI using structured, automated agent orchestration, including development and review by different models (Claude CLI Sonnet/Opus & Codex CLI), result verification, and regression testing.
 > 
 > Design and implementation decisions were made by me and reviewed/tested.
 >
@@ -40,8 +40,6 @@ This package modernizes related-object interactions while following Unfold’s d
 ```bash
 pip install django-unfold-modal
 ```
-
-> **Naming:** Install name is `django-unfold-modal`, import/app name is `unfold_modal` — mirroring the `django-unfold` / `unfold` pattern.
 
 Add to your `INSTALLED_APPS` after `unfold`:
 
