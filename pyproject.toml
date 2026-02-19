@@ -5,6 +5,17 @@ description = "Modal-based related-object popups for django-unfold"
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.10"
+authors = [
+    { name = "Marc Widmer", email = "marc@pbi.io" },
+]
+keywords = [
+    "django",
+    "unfold",
+    "admin",
+    "modal",
+    "popup",
+    "related widget",
+]
 dependencies = [
     "django>=5.0",
     "django-unfold>=0.52.0",
@@ -26,6 +37,7 @@ classifiers = [
 ]
 
 [project.urls]
+Homepage = "https://github.com/metaforx/django-unfold-modal"
 Repository = "https://github.com/metaforx/django-unfold-modal"
 
 [build-system]
