@@ -116,14 +116,14 @@ To use custom size presets (`UNFOLD_MODAL_SIZE`) or enable resize (`UNFOLD_MODAL
 
 1. Include the app's URLs in your `urls.py`:
 
-```python
-from django.urls import include, path
+    ```python
+    from django.urls import include, path
 
-urlpatterns = [
-    path("admin/", admin.site.urls),
-    path("unfold-modal/", include("unfold_modal.urls")),
-]
-```
+    urlpatterns = [
+        path("admin/", admin.site.urls),
+        path("unfold-modal/", include("unfold_modal.urls")),
+    ]
+    ```
 
 2. Use `get_modal_scripts_with_config` instead of `get_modal_scripts` in your UNFOLD configuration (see Installation section above).
 
