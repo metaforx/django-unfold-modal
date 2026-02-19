@@ -1,10 +1,10 @@
-"""Views for django-unfold-modal."""
+"""Views for unfold-modal."""
 
 import json
 
 from django.http import HttpResponse
 
-from .apps import DjangoUnfoldModalConfig, get_setting
+from .apps import UnfoldModalConfig, get_setting
 
 
 def modal_config_js(request):
@@ -20,7 +20,7 @@ def modal_config_js(request):
     disable_header = get_setting("UNFOLD_MODAL_DISABLE_HEADER")
 
     # Get dimensions from preset or use default
-    presets = DjangoUnfoldModalConfig.SIZE_PRESETS
+    presets = UnfoldModalConfig.SIZE_PRESETS
     dimensions = presets.get(size_preset, presets["default"])
 
     config = {

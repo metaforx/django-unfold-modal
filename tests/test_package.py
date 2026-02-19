@@ -1,22 +1,22 @@
-"""Tests for django_unfold_modal package."""
+"""Tests for unfold_modal package."""
 
 
 class TestPackageImport:
     """Verify package can be imported and has expected attributes."""
 
     def test_import_package(self):
-        import django_unfold_modal
+        import unfold_modal
 
-        assert django_unfold_modal.__version__ == "0.1.0"
+        assert unfold_modal.__version__ == "0.1.0"
 
     def test_import_app_config(self):
-        from django_unfold_modal.apps import DjangoUnfoldModalConfig
+        from unfold_modal.apps import UnfoldModalConfig
 
-        assert DjangoUnfoldModalConfig.name == "django_unfold_modal"
+        assert UnfoldModalConfig.name == "unfold_modal"
 
     def test_default_settings(self):
-        from django_unfold_modal.apps import DjangoUnfoldModalConfig
+        from unfold_modal.apps import UnfoldModalConfig
 
-        defaults = DjangoUnfoldModalConfig.default_settings
+        defaults = UnfoldModalConfig.default_settings
         assert defaults["UNFOLD_MODAL_VARIANT"] == "iframe"
         assert defaults["UNFOLD_MODAL_PRESENTATION"] == "modal"
