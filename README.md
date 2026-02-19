@@ -15,12 +15,12 @@ Replaces Django admin's popup windows for related objects (ForeignKey, ManyToMan
 - Stylable using Unfold theme configuration & custom CSS
 
 ## Motivation
-As much as I love the Django admin interface, I have always found its related-object pop-ups clunky and outdated. 
-They open in separate browser windows, which can disrupt the workflow and do not fit well with modern UI patterns.
-While this is fine for straightforward admin usage, when exposing the admin to users, it often causes confusion.
+As much as I love the Django admin, I’ve always found its related-object pop-ups clunky and outdated. 
+They open in separate browser windows, which breaks the flow and doesn’t fit modern UI patterns. 
+It’s fine for straightforward admin use, but when exposed to users, it often causes confusion.
 
-There is much debate about how much of the admin functionality should be exposed to users, but in my experience, [Django Unfold](https://github.com/unfoldadmin/django-unfold) has made it possible to expose this functionality to dedicated users. 
-Adding a more modern and user-friendly interface for related-object felt like a missing piece of the puzzle.
+[Django Unfold](https://github.com/unfoldadmin/django-unfold) akes exposing admin functionality viable for dedicated users. 
+This package modernizes related-object interactions while following Unfold’s design principles.
 
 > **AI Disclaimer:** My goal was to research agentic capabilities in the development process of this package. All code was intentionally written by AI using structured, automated agent orchestration, including development and review by different models (Claude CLI Sonnet/Opus & Codex CLI), result verification, and regression testing.
 > 
