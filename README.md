@@ -73,6 +73,8 @@ UNFOLD = {
 }
 ```
 
+This setup loads only the core modal scripts. If you do not use the configuration options below, this is enough.
+
 **Config-enabled setup** (for custom sizes and resize handle):
 
 ```python
@@ -88,6 +90,8 @@ UNFOLD = {
     ],
 }
 ```
+
+This setup adds a config script (served from `unfold_modal.urls`) before the core JS so the frontend can read size presets and `UNFOLD_MODAL_RESIZE`. See **Configuration** below for the options that require it.
 
 ## Configuration
 
