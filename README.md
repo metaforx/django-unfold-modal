@@ -19,7 +19,7 @@ As much as I love the Django admin, I’ve always found its related-object pop-u
 They open in separate browser windows, which breaks the flow and doesn’t fit modern UI patterns. 
 It’s fine for straightforward admin use, but when exposed to users, it often causes confusion.
 
-[Django Unfold](https://github.com/unfoldadmin/django-unfold) akes exposing admin functionality viable for dedicated users. 
+[Django Unfold](https://github.com/unfoldadmin/django-unfold) greatly improves the admin’s UX for regular users.
 This package modernizes related-object interactions while following Unfold’s design principles.
 
 > **AI Disclaimer:** My goal was to research agentic capabilities in the development process of this package. All code was intentionally written by AI using structured, automated agent orchestration, including development and review by different models (Claude CLI Sonnet/Opus & Codex CLI), result verification, and regression testing.
