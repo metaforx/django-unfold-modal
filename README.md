@@ -1,6 +1,6 @@
 ![Unfold modal preview](docs/images/unfold-modal.png)
 # django-unfold-modal
-[![CI](https://github.com/metaforx/django-unfold-modal/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/metaforx/django-unfold-modal/actions/workflows/ci.yml)
+[![PyPI - Version](https://img.shields.io/pypi/v/django-unfold-modal.svg?style=for-the-badge)](https://pypi.org/project/django-unfold-modal/) [![Build](https://img.shields.io/github/actions/workflow/status/metaforx/django-unfold-modal/ci.yml?style=for-the-badge&event=pull_request)](https://github.com/metaforx/django-unfold-modal/actions/workflows/ci.yml)
 
 Modal-based related-object popups for [django-unfold](https://github.com/unfoldadmin/django-unfold).
 
