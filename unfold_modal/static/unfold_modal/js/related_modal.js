@@ -556,8 +556,18 @@
     function init($) {
         utils.setPopupIndex();
 
-        if (state.isInIframe) {
-            // Running inside a modal iframe
+        // Determine if parent has CMS host module loaded (fallback to local if not)
+        var delegateToParent = state.isInIframe;
+        if (!delegateToParent && state.isInCmsModal) {
+            try {
+                delegateToParent = !!(window.parent.UnfoldModal && window.parent.UnfoldModal.cmsHost);
+            } catch (e) {
+                // Cross-origin: cannot check parent, fall back to local
+            }
+        }
+
+        if (delegateToParent) {
+            // Running inside a modal iframe (Unfold nested or CMS modal with host)
             $('body').on('django:show-related', '.related-widget-wrapper-link[data-popup="yes"]', handleShowRelatedInIframe);
             $('body').on('django:lookup-related', '.related-lookup', handleLookupRelatedInIframe);
 

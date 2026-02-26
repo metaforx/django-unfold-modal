@@ -15,6 +15,10 @@ class UnfoldModalConfig(AppConfig):
         "UNFOLD_MODAL_SIZE": "default",  # Presets: "default", "large", "full"
         "UNFOLD_MODAL_RESIZE": False,  # Enable manual resize handle
         "UNFOLD_MODAL_DISABLE_HEADER": True,  # Hide admin header in modal iframes
+        # CMS parent-window modal settings (independent from regular modal)
+        "UNFOLD_CMS_MODAL_SIZE": "full",  # Fullscreen default for CMS context
+        "UNFOLD_CMS_MODAL_RESIZE": False,  # Resize handle in CMS modal
+        "UNFOLD_CMS_MODAL_DISABLE_HEADER": True,  # Hide admin header in CMS modal
     }
 
     # Size preset dimensions (width, maxWidth, height, maxHeight)
