@@ -135,6 +135,48 @@ To use custom size presets (`UNFOLD_MODAL_SIZE`) or enable resize (`UNFOLD_MODAL
 | `large`   | 95%   | 1200px    | 90vh   | 900px      |
 | `full`    | 98%   | none      | 95vh   | none       |
 
+## Django CMS Integration
+
+When Django admin is embedded inside a Django CMS modal (e.g., editing a page plugin), unfold-modal can render its modals in the CMS parent document instead of inside the admin iframe.
+
+### How It Works
+
+- Admin inside a **CMS sideframe** iframe: modals open inside the iframe (standard behavior).
+- Admin inside a **CMS modal** iframe (`.cms-modal`): modals open in the CMS parent document for a seamless full-page experience.
+
+Detection is automatic based on the presence of a `.cms-modal` ancestor in the parent DOM.
+
+### CMS Template Setup
+
+Load the required assets in your CMS base template (e.g., a custom `base.html` extending CMS templates):
+
+```html
+{% load unfold_modal_tags %}
+<head>
+    ...
+    {% unfold_modal_cms_head %}
+</head>
+```
+
+This outputs the modal CSS, inline config, and JS modules needed for CMS parent-window modal hosting.
+
+### CMS Modal Settings
+
+CMS modal settings are independent from regular admin modal settings. Defaults are optimized for CMS context (fullscreen):
+
+```python
+# CMS modal size preset (default: "full")
+UNFOLD_CMS_MODAL_SIZE = "full"
+
+# Enable resize handle in CMS modal (default: False)
+UNFOLD_CMS_MODAL_RESIZE = False
+
+# Hide admin header inside CMS modal iframes (default: True)
+UNFOLD_CMS_MODAL_DISABLE_HEADER = True
+```
+
+Regular `UNFOLD_MODAL_*` settings continue to apply to standard admin modal usage. CMS settings only affect modals opened from within a CMS modal context.
+
 ## Supported Widgets
 
 - ForeignKey select
