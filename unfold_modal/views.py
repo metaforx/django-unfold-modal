@@ -5,6 +5,7 @@ import json
 from django.http import HttpResponse
 
 from .apps import UnfoldModalConfig, get_setting
+from .utils import _build_cms_config
 
 
 def modal_config_js(request):
@@ -23,23 +24,12 @@ def modal_config_js(request):
     disable_header = get_setting("UNFOLD_MODAL_DISABLE_HEADER")
     dimensions = presets.get(size_preset, presets["default"])
 
-    # CMS parent-window modal settings
-    cms_size = get_setting("UNFOLD_CMS_MODAL_SIZE")
-    cms_resize = get_setting("UNFOLD_CMS_MODAL_RESIZE")
-    cms_disable_header = get_setting("UNFOLD_CMS_MODAL_DISABLE_HEADER")
-    cms_dimensions = presets.get(cms_size, presets["full"])
-
     config = {
         "size": size_preset,
         "dimensions": dimensions,
         "resize": resize_enabled,
         "disableHeader": disable_header,
-        "cms": {
-            "size": cms_size,
-            "dimensions": cms_dimensions,
-            "resize": cms_resize,
-            "disableHeader": cms_disable_header,
-        },
+        "cms": _build_cms_config(),
     }
 
     js_content = f"window.UNFOLD_MODAL_CONFIG = {json.dumps(config)};"
