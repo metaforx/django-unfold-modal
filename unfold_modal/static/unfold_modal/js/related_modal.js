@@ -584,7 +584,12 @@
             $('body').on('django:show-related', '.related-widget-wrapper-link[data-popup="yes"]', handleShowRelated);
             $('body').on('django:lookup-related', '.related-lookup', handleLookupRelated);
 
-            window.addEventListener('message', handleParentMessage);
+            // Skip parent message handler when cms_host.js is loaded on this page.
+            // By the time init() runs (poll or DOMContentLoaded), cms_host.js has
+            // already executed and set Modal.cmsHost, so this check is reliable.
+            if (!Modal.cmsHost) {
+                window.addEventListener('message', handleParentMessage);
+            }
         }
     }
 
@@ -592,12 +597,15 @@
      * Initialize when django.jQuery is available.
      * Single-path initialization: poll for django.jQuery, then call init.
      */
-    function initWhenReady() {
+    function initWhenReady(attempt) {
         if (typeof django !== 'undefined' && typeof django.jQuery !== 'undefined') {
             init(django.jQuery);
-        } else {
-            // Poll until django.jQuery is available (Django admin loads it async)
-            setTimeout(initWhenReady, 50);
+        } else if ((attempt || 0) < 600) {
+            // Poll until django.jQuery is available (Django admin loads it async).
+            // Cap at 600 attempts (~30 s) as a safety net; on genuine CMS parent
+            // pages the Modal.cmsHost guard above prevents conflicting handlers
+            // even if jquery appears late.
+            setTimeout(function() { initWhenReady((attempt || 0) + 1); }, 50);
         }
     }
 

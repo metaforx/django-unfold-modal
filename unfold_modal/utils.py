@@ -103,6 +103,24 @@ def get_modal_scripts_with_config():
     ]
 
 
+def _build_cms_config():
+    """Build CMS modal config dict (single source of truth)."""
+    from unfold_modal.apps import UnfoldModalConfig, get_setting
+
+    presets = UnfoldModalConfig.SIZE_PRESETS
+    cms_size = get_setting("UNFOLD_CMS_MODAL_SIZE")
+    cms_resize = get_setting("UNFOLD_CMS_MODAL_RESIZE")
+    cms_disable_header = get_setting("UNFOLD_CMS_MODAL_DISABLE_HEADER")
+    cms_dimensions = presets.get(cms_size, presets["full"])
+
+    return {
+        "size": cms_size,
+        "dimensions": cms_dimensions,
+        "resize": cms_resize,
+        "disableHeader": cms_disable_header,
+    }
+
+
 def get_cms_modal_head_html():
     """
     Return HTML string with all required assets for CMS parent-window modal hosting.
@@ -121,34 +139,18 @@ def get_cms_modal_head_html():
 
         html = f"<head>{get_cms_modal_head_html()}</head>"
     """
-    from unfold_modal.apps import UnfoldModalConfig, get_setting
-
-    presets = UnfoldModalConfig.SIZE_PRESETS
-    cms_size = get_setting("UNFOLD_CMS_MODAL_SIZE")
-    cms_resize = get_setting("UNFOLD_CMS_MODAL_RESIZE")
-    cms_disable_header = get_setting("UNFOLD_CMS_MODAL_DISABLE_HEADER")
-    cms_dimensions = presets.get(cms_size, presets["full"])
-
-    config = {
-        "size": cms_size,
-        "dimensions": cms_dimensions,
-        "resize": cms_resize,
-        "disableHeader": cms_disable_header,
-        "cms": {
-            "size": cms_size,
-            "dimensions": cms_dimensions,
-            "resize": cms_resize,
-            "disableHeader": cms_disable_header,
-        },
-    }
+    cms_config = _build_cms_config()
+    config = {**cms_config, "cms": cms_config}
 
     css_url = static("unfold_modal/css/modal.css")
     core_js_url = static("unfold_modal/js/modal_core.js")
+    related_js_url = static("unfold_modal/js/related_modal.js")
     host_js_url = static("unfold_modal/js/cms_host.js")
 
     return mark_safe(
         f'<link rel="stylesheet" href="{css_url}">\n'
         f"<script>window.UNFOLD_MODAL_CONFIG = {json.dumps(config)};</script>\n"
         f'<script src="{core_js_url}"></script>\n'
+        f'<script src="{related_js_url}"></script>\n'
         f'<script src="{host_js_url}"></script>'
     )
