@@ -9,20 +9,20 @@
 'use strict';
 
 (function(Modal) {
-    var MSG = Modal.MSG;
-    var utils = Modal.utils;
-    var state = Modal.state;
+    const MSG = Modal.MSG;
+    const utils = Modal.utils;
+    const state = Modal.state;
 
     // Track which iframe window sent the initial open request
-    var originIframeWindow = null;
+    let originIframeWindow = null;
 
     /**
      * Collect same-origin iframe windows from the current document.
      */
     function getChildIframeWindows() {
-        var wins = [];
-        var iframes = document.querySelectorAll('iframe');
-        for (var i = 0; i < iframes.length; i++) {
+        const wins = [];
+        const iframes = document.querySelectorAll('iframe');
+        for (let i = 0; i < iframes.length; i++) {
             try { wins.push(iframes[i].contentWindow); } catch (e) {}
         }
         return wins;
@@ -32,17 +32,17 @@
         // Validate origin: only accept same-origin messages
         if (event.origin !== window.location.origin) return;
 
-        var data = event.data;
+        const data = event.data;
         if (!data || !data.type) return;
 
-        var activeModal = utils.getActiveModal();
-        var modalStack = state.modalStack;
+        const activeModal = utils.getActiveModal();
+        const modalStack = state.modalStack;
 
         // Open request from child iframe
         if (data.type === MSG.MODAL_OPEN) {
             if (!activeModal) {
                 // First modal – verify sender is a known child iframe
-                var knownIframes = getChildIframeWindows();
+                const knownIframes = getChildIframeWindows();
                 if (knownIframes.indexOf(event.source) === -1) return;
                 originIframeWindow = event.source;
             } else {
@@ -70,8 +70,8 @@
 
         if (modalStack.length > 1) {
             // Nested modal completing – forward to previous modal's iframe
-            var previousModal = modalStack[modalStack.length - 2];
-            var popupUrl = '';
+            const previousModal = modalStack[modalStack.length - 2];
+            let popupUrl = '';
             try { popupUrl = activeModal.iframe.contentWindow.location.href; } catch (e) {}
 
             Modal.close();
@@ -87,7 +87,7 @@
             } catch (e) {}
         } else {
             // Top-level modal completing – forward dismiss to origin admin iframe
-            var topPopupUrl = '';
+            let topPopupUrl = '';
             try { topPopupUrl = activeModal.iframe.contentWindow.location.href; } catch (e) {}
 
             Modal.close();
