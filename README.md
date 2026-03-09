@@ -12,6 +12,7 @@ Replaces Django admin's popup windows for related objects (ForeignKey, ManyToMan
 - Raw ID lookup + autocomplete + inline related fields
 - Optional modal resize + size presets
 - Optional admin header suppression inside iframe
+- Django CMS modal support (open admin modals in Django CMS parent window)
 - Stylable using Unfold theme configuration & custom CSS
 
 ## Motivation
