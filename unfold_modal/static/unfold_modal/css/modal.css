@@ -10,10 +10,31 @@
  * CSS Custom Properties (defaults, can be overridden)
  * --------------------------------------------------------------- */
 :root {
-    --unfold-modal-z-index: 9999;
+    --unfold-modal-z-index: 9999999;
     --unfold-modal-backdrop: rgba(0, 0, 0, 0.5);
     --unfold-modal-transition-duration: 150ms;
     --unfold-modal-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+/* ---------------------------------------------------------------
+ * Material Symbols Fallback
+ * --------------------------------------------------------------- */
+.material-symbols-outlined {
+    font-family: "Material Symbols Outlined";
+    font-weight: 400;
+    font-style: normal;
+    font-size: 18px;
+    line-height: 1;
+    letter-spacing: normal;
+    text-transform: none;
+    display: inline-block;
+    white-space: nowrap;
+    word-wrap: normal;
+    direction: ltr;
+    font-feature-settings: "liga";
+    -webkit-font-feature-settings: "liga";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 /* ---------------------------------------------------------------

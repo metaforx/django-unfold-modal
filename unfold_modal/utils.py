@@ -142,12 +142,14 @@ def get_cms_modal_head_html():
     cms_config = _build_cms_config()
     config = {**cms_config, "cms": cms_config}
 
+    icons_css_url = static("unfold/fonts/material-symbols/styles.css")
     css_url = static("unfold_modal/css/modal.css")
     core_js_url = static("unfold_modal/js/modal_core.js")
     related_js_url = static("unfold_modal/js/related_modal.js")
     host_js_url = static("unfold_modal/js/cms_host.js")
 
     return mark_safe(
+        f'<link rel="stylesheet" href="{icons_css_url}">\n'
         f'<link rel="stylesheet" href="{css_url}">\n'
         f"<script>window.UNFOLD_MODAL_CONFIG = {json.dumps(config)};</script>\n"
         f'<script src="{core_js_url}"></script>\n'
