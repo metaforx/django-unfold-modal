@@ -344,6 +344,39 @@
     // ---------------------------------------------------------------
 
     /**
+     * Fallback raw_id lookup dismiss handler.
+     * Used when Django's dismissRelatedLookupPopup cannot resolve the target.
+     * This primarily protects CMS parent-host modal flows where dismiss events
+     * are forwarded across iframes via postMessage.
+     */
+    function fallbackDismissRelatedLookup(fakeWin, chosenId) {
+        if (!fakeWin || !fakeWin.name || typeof chosenId === 'undefined') {
+            return false;
+        }
+
+        // Mirror Django's add/remove popup index behavior without relying on popupIndex.
+        const fieldId = fakeWin.name.replace(/__\d+$/, '');
+        const field = document.getElementById(fieldId);
+        if (!field) {
+            return false;
+        }
+
+        if (field.classList.contains('vManyToManyRawIdAdminField') && field.value) {
+            field.value += ',' + chosenId;
+        } else {
+            field.value = chosenId;
+        }
+
+        // Keep related links and dependent UI in sync.
+        field.dispatchEvent(new Event('change', { bubbles: true }));
+
+        if (typeof fakeWin.close === 'function') {
+            fakeWin.close();
+        }
+        return true;
+    }
+
+    /**
      * Create a fake window object for Django's dismiss functions.
      */
     function createFakeWindow(modal) {
@@ -387,8 +420,15 @@
                 break;
             case MSG.POPUP_LOOKUP:
                 if (window.dismissRelatedLookupPopup) {
-                    window.dismissRelatedLookupPopup(fakeWin, data.chosenId);
+                    try {
+                        window.dismissRelatedLookupPopup(fakeWin, data.chosenId);
+                        break;
+                    } catch (e) {
+                        // CMS parent-host: forwarded dismiss may miss default resolver context.
+                        // Fall through to explicit field writeback fallback.
+                    }
                 }
+                fallbackDismissRelatedLookup(fakeWin, data.chosenId);
                 break;
         }
     }
