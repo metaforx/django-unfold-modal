@@ -1,6 +1,6 @@
 [project]
 name = "django-unfold-modal"
-version = "0.1.0"
+dynamic = ["version"]
 description = "Modal-based related-object popups for django-unfold"
 readme = "README.md"
 license = "MIT"
@@ -47,10 +47,12 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.wheel]
 packages = ["unfold_modal"]
 
+[tool.hatch.version]
+path = "unfold_modal/__init__.py"
+
 # Poetry for dependency management (dev/test)
 [tool.poetry]
 name = "django-unfold-modal"
-version = "0.1.0"
 description = "Modal-based related-object popups for django-unfold"
 package-mode = false
 

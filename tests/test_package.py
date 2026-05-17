@@ -1,5 +1,7 @@
 """Tests for unfold_modal package."""
 
+import re
+
 
 class TestPackageImport:
     """Verify package can be imported and has expected attributes."""
@@ -7,7 +9,8 @@ class TestPackageImport:
     def test_import_package(self):
         import unfold_modal
 
-        assert unfold_modal.__version__ == "0.1.0"
+        assert isinstance(unfold_modal.__version__, str)
+        assert re.match(r"^\d+\.\d+\.\d+", unfold_modal.__version__)
 
     def test_import_app_config(self):
         from unfold_modal.apps import UnfoldModalConfig
