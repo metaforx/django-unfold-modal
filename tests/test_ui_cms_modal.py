@@ -5,8 +5,12 @@ The unfold-modal should open in the CMS parent document (outside the admin ifram
 not inside the iframe or as a popup window.
 """
 
+import re
+
 import pytest
 from playwright.sync_api import expect
+
+from testapp.models import Publisher
 
 
 @pytest.mark.django_db(transaction=True)
@@ -117,6 +121,40 @@ class TestCmsModalHost:
         # Check container uses "full" preset dimensions (98% width, maxWidth none)
         max_width = container.evaluate("el => el.style.maxWidth")
         assert max_width == "none", f"Expected maxWidth 'none' for full preset, got '{max_width}'"
+
+        context.close()
+
+    def test_raw_id_lookup_selection_updates_field_in_cms_iframe(
+        self, browser, live_server, admin_user
+    ):
+        """Selecting from raw_id lookup in CMS-hosted admin should update the source field."""
+        Publisher.objects.create(name="CMS Publisher")
+
+        context = browser.new_context()
+        page = context.new_page()
+
+        # Log in
+        page.goto(f"{live_server.url}/admin/login/?next=/admin/")
+        page.fill('input[name="username"]', "playwrightadmin")
+        page.fill('input[name="password"]', "playwrightpass")
+        page.click('button[type="submit"], input[type="submit"]')
+        page.wait_for_load_state("networkidle")
+
+        # Open admin add form inside CMS modal host
+        book_add_url = "/admin/testapp/book/add/"
+        page.goto(f"{live_server.url}/cms-modal-host/?url={book_add_url}")
+        page.wait_for_load_state("networkidle")
+
+        cms_iframe = page.frame_locator("#cms-iframe")
+        cms_iframe.locator("#lookup_id_publisher").wait_for(state="visible", timeout=10000)
+
+        # Open lookup in parent-hosted modal and pick object
+        cms_iframe.locator("#lookup_id_publisher").click()
+        lookup_iframe = page.frame_locator(".unfold-modal-iframe")
+        lookup_iframe.locator("a:has-text('CMS Publisher')").click()
+
+        # The value should be written back into source iframe field
+        expect(cms_iframe.locator("#id_publisher")).to_have_value(re.compile(r"\d+"))
 
         context.close()
 

@@ -159,7 +159,7 @@ Load the required assets in your CMS base template (e.g., a custom `base.html` e
 </head>
 ```
 
-This outputs the modal CSS, inline config, and JS modules needed for CMS parent-window modal hosting.
+This outputs the Material Symbols icon font, modal CSS, inline config, and JS modules needed for CMS parent-window modal hosting. The icon font is required so modal controls (close, maximize) display as glyphs instead of plain text. The modal uses a high z-index (`9999999`) to render above Django CMS layers.
 
 ### CMS Modal Settings
 
