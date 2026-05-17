@@ -92,8 +92,22 @@ window.UnfoldModal = window.UnfoldModal || {};
     // Popup index for nested popups (matches Django's scheme)
     let popupIndex = 0;
 
-    // Detect whether script is running inside a modal iframe
-    const isInIframe = (window.parent !== window) && !window.opener;
+    // Detect whether script is running inside an Unfold modal iframe
+    // (not just any iframe, e.g. Django CMS sideframe)
+    let isInIframe = false;
+    // Detect whether script is running inside a Django CMS modal iframe
+    let isInCmsModal = false;
+    try {
+        if (window.parent !== window && !window.opener && window.frameElement) {
+            if (window.frameElement.classList.contains('unfold-modal-iframe')) {
+                isInIframe = true;
+            } else if (window.frameElement.closest('.cms-modal') !== null) {
+                isInCmsModal = true;
+            }
+        }
+    } catch (e) {
+        // Cross-origin: frameElement access throws; not our iframe
+    }
 
     // Expose state accessors
     Modal.state = {
@@ -103,6 +117,7 @@ window.UnfoldModal = window.UnfoldModal || {};
         get isResizing() { return isResizing; },
         set isResizing(v) { isResizing = v; },
         get isInIframe() { return isInIframe; },
+        get isInCmsModal() { return isInCmsModal; },
         get popupIndex() { return popupIndex; },
         set popupIndex(v) { popupIndex = v; }
     };

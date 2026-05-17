@@ -344,6 +344,39 @@
     // ---------------------------------------------------------------
 
     /**
+     * Fallback raw_id lookup dismiss handler.
+     * Used when Django's dismissRelatedLookupPopup cannot resolve the target.
+     * This primarily protects CMS parent-host modal flows where dismiss events
+     * are forwarded across iframes via postMessage.
+     */
+    function fallbackDismissRelatedLookup(fakeWin, chosenId) {
+        if (!fakeWin || !fakeWin.name || typeof chosenId === 'undefined') {
+            return false;
+        }
+
+        // Mirror Django's add/remove popup index behavior without relying on popupIndex.
+        const fieldId = fakeWin.name.replace(/__\d+$/, '');
+        const field = document.getElementById(fieldId);
+        if (!field) {
+            return false;
+        }
+
+        if (field.classList.contains('vManyToManyRawIdAdminField') && field.value) {
+            field.value += ',' + chosenId;
+        } else {
+            field.value = chosenId;
+        }
+
+        // Keep related links and dependent UI in sync.
+        field.dispatchEvent(new Event('change', { bubbles: true }));
+
+        if (typeof fakeWin.close === 'function') {
+            fakeWin.close();
+        }
+        return true;
+    }
+
+    /**
      * Create a fake window object for Django's dismiss functions.
      */
     function createFakeWindow(modal) {
@@ -387,8 +420,15 @@
                 break;
             case MSG.POPUP_LOOKUP:
                 if (window.dismissRelatedLookupPopup) {
-                    window.dismissRelatedLookupPopup(fakeWin, data.chosenId);
+                    try {
+                        window.dismissRelatedLookupPopup(fakeWin, data.chosenId);
+                        break;
+                    } catch (e) {
+                        // CMS parent-host: forwarded dismiss may miss default resolver context.
+                        // Fall through to explicit field writeback fallback.
+                    }
                 }
+                fallbackDismissRelatedLookup(fakeWin, data.chosenId);
                 break;
         }
     }
@@ -556,8 +596,18 @@
     function init($) {
         utils.setPopupIndex();
 
-        if (state.isInIframe) {
-            // Running inside a modal iframe
+        // Determine if parent has CMS host module loaded (fallback to local if not)
+        var delegateToParent = state.isInIframe;
+        if (!delegateToParent && state.isInCmsModal) {
+            try {
+                delegateToParent = !!(window.parent.UnfoldModal && window.parent.UnfoldModal.cmsHost);
+            } catch (e) {
+                // Cross-origin: cannot check parent, fall back to local
+            }
+        }
+
+        if (delegateToParent) {
+            // Running inside a modal iframe (Unfold nested or CMS modal with host)
             $('body').on('django:show-related', '.related-widget-wrapper-link[data-popup="yes"]', handleShowRelatedInIframe);
             $('body').on('django:lookup-related', '.related-lookup', handleLookupRelatedInIframe);
 
@@ -574,7 +624,12 @@
             $('body').on('django:show-related', '.related-widget-wrapper-link[data-popup="yes"]', handleShowRelated);
             $('body').on('django:lookup-related', '.related-lookup', handleLookupRelated);
 
-            window.addEventListener('message', handleParentMessage);
+            // Skip parent message handler when cms_host.js is loaded on this page.
+            // By the time init() runs (poll or DOMContentLoaded), cms_host.js has
+            // already executed and set Modal.cmsHost, so this check is reliable.
+            if (!Modal.cmsHost) {
+                window.addEventListener('message', handleParentMessage);
+            }
         }
     }
 
@@ -582,12 +637,15 @@
      * Initialize when django.jQuery is available.
      * Single-path initialization: poll for django.jQuery, then call init.
      */
-    function initWhenReady() {
+    function initWhenReady(attempt) {
         if (typeof django !== 'undefined' && typeof django.jQuery !== 'undefined') {
             init(django.jQuery);
-        } else {
-            // Poll until django.jQuery is available (Django admin loads it async)
-            setTimeout(initWhenReady, 50);
+        } else if ((attempt || 0) < 600) {
+            // Poll until django.jQuery is available (Django admin loads it async).
+            // Cap at 600 attempts (~30 s) as a safety net; on genuine CMS parent
+            // pages the Modal.cmsHost guard above prevents conflicting handlers
+            // even if jquery appears late.
+            setTimeout(function() { initWhenReady((attempt || 0) + 1); }, 50);
         }
     }
 

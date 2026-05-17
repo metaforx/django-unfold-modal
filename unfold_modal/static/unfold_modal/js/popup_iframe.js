@@ -1,7 +1,16 @@
 'use strict';
 (function() {
-    // Only run in iframe mode (no opener, has parent)
-    if (window.opener || !window.parent || window.parent === window) {
+    // Only run inside an Unfold modal iframe (not any iframe, e.g. CMS sideframe)
+    var isInModalIframe = false;
+    try {
+        isInModalIframe = (window.parent !== window)
+            && !window.opener
+            && window.frameElement
+            && window.frameElement.classList.contains('unfold-modal-iframe');
+    } catch (e) {
+        // Cross-origin: frameElement access throws; not our modal iframe
+    }
+    if (!isInModalIframe) {
         return;
     }
 

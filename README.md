@@ -12,6 +12,7 @@ Replaces Django admin's popup windows for related objects (ForeignKey, ManyToMan
 - Raw ID lookup + autocomplete + inline related fields
 - Optional modal resize + size presets
 - Optional admin header suppression inside iframe
+- Django CMS modal support (open admin modals in Django CMS parent window)
 - Stylable using Unfold theme configuration & custom CSS
 
 ## Motivation
@@ -134,6 +135,48 @@ To use custom size presets (`UNFOLD_MODAL_SIZE`) or enable resize (`UNFOLD_MODAL
 | `default` | 90%   | 900px     | 85vh   | 700px      |
 | `large`   | 95%   | 1200px    | 90vh   | 900px      |
 | `full`    | 98%   | none      | 95vh   | none       |
+
+## Django CMS Integration
+
+When Django admin is embedded inside a Django CMS modal (e.g., editing a page plugin), unfold-modal can render its modals in the CMS parent document instead of inside the admin iframe.
+
+### How It Works
+
+- Admin inside a **CMS sideframe** iframe: modals open inside the iframe (standard behavior).
+- Admin inside a **CMS modal** iframe (`.cms-modal`): modals open in the CMS parent document for a seamless full-page experience.
+
+Detection is automatic based on the presence of a `.cms-modal` ancestor in the parent DOM.
+
+### CMS Template Setup
+
+Load the required assets in your CMS base template (e.g., a custom `base.html` extending CMS templates):
+
+```html
+{% load unfold_modal_tags %}
+<head>
+    ...
+    {% unfold_modal_cms_head %}
+</head>
+```
+
+This outputs the Material Symbols icon font, modal CSS, inline config, and JS modules needed for CMS parent-window modal hosting. The icon font is required so modal controls (close, maximize) display as glyphs instead of plain text. The modal uses a high z-index (`9999999`) to render above Django CMS layers.
+
+### CMS Modal Settings
+
+CMS modal settings are independent from regular admin modal settings. Defaults are optimized for CMS context (fullscreen):
+
+```python
+# CMS modal size preset (default: "full")
+UNFOLD_CMS_MODAL_SIZE = "full"
+
+# Enable resize handle in CMS modal (default: False)
+UNFOLD_CMS_MODAL_RESIZE = False
+
+# Hide admin header inside CMS modal iframes (default: True)
+UNFOLD_CMS_MODAL_DISABLE_HEADER = True
+```
+
+Regular `UNFOLD_MODAL_*` settings continue to apply to standard admin modal usage. CMS settings only affect modals opened from within a CMS modal context.
 
 ## Supported Widgets
 
