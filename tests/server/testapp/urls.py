@@ -1,3 +1,5 @@
+from html import escape as html_escape
+
 from django.contrib import admin
 from django.http import HttpResponse
 from django.urls import include, path
@@ -9,7 +11,7 @@ def _safe_admin_url(request):
     url = request.GET.get("url", "/admin/")
     if not url.startswith("/") or url.startswith("//"):
         url = "/admin/"
-    return url
+    return html_escape(url, quote=True)
 
 
 def iframe_host_view(request):
