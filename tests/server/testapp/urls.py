@@ -5,9 +5,16 @@ from django.urls import include, path
 from unfold_modal.utils import get_cms_modal_head_html
 
 
+def _safe_admin_url(request):
+    url = request.GET.get("url", "/admin/")
+    if not url.startswith("/") or url.startswith("//"):
+        url = "/admin/"
+    return url
+
+
 def iframe_host_view(request):
     """Serve a page that embeds admin in an iframe (simulates CMS sideframe)."""
-    admin_url = request.GET.get("url", "/admin/")
+    admin_url = _safe_admin_url(request)
     html = f"""<!DOCTYPE html>
 <html>
 <head><title>Iframe Host</title></head>
@@ -20,7 +27,7 @@ def iframe_host_view(request):
 
 def cms_modal_host_view(request):
     """Serve a page that simulates Django CMS modal hosting admin in an iframe."""
-    admin_url = request.GET.get("url", "/admin/")
+    admin_url = _safe_admin_url(request)
     cms_head = get_cms_modal_head_html()
     html = f"""<!DOCTYPE html>
 <html>
