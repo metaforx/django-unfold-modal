@@ -34,7 +34,7 @@ This package modernizes related-object interactions while following Unfold’s d
 
 - Python 3.10+
 - Django 5.0+
-- django-unfold 0.52.0+ (tested with latest)
+- django-unfold >=0.52.0<0.86.0 (Theme switching needs to be updated to fully support later versions.)
 
 ## Installation
 
