@@ -40,7 +40,8 @@ window.UnfoldModal = window.UnfoldModal || {};
         POPUP_ADD: 'django:popup:add',
         POPUP_CHANGE: 'django:popup:change',
         POPUP_DELETE: 'django:popup:delete',
-        POPUP_LOOKUP: 'django:popup:lookup'
+        POPUP_LOOKUP: 'django:popup:lookup',
+        POPUP_FILER: 'django:popup:filer'
     };
 
     Modal.MSG = MSG;

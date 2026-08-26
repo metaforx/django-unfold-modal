@@ -13,6 +13,7 @@ Replaces Django admin's popup windows for related objects (ForeignKey, ManyToMan
 - Optional modal resize + size presets
 - Optional admin header suppression inside iframe
 - Django CMS modal support (open admin modals in Django CMS parent window)
+- Django Filer widget support (folder and file selection)
 - Stylable using Unfold theme configuration & custom CSS
 
 ## Motivation
@@ -34,7 +35,7 @@ This package modernizes related-object interactions while following Unfold’s d
 
 - Python 3.10+
 - Django 5.0+
-- django-unfold 0.52.0+ (tested with latest)
+- django-unfold 0.52.0+ (latest tested: 0.92.0)
 
 ## Installation
 
@@ -186,6 +187,7 @@ Regular `UNFOLD_MODAL_*` settings continue to apply to standard admin modal usag
 - `raw_id_fields` lookup
 - `autocomplete_fields` (Select2)
 - Related fields within inline forms
+- Django Filer folder and file selection widgets
 
 ## Testing
 
