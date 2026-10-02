@@ -28,7 +28,7 @@ This package modernizes related-object interactions while following Unfold’s d
 
 - Python 3.10+
 - Django 5.0+
-- django-unfold 0.52.0+ (latest tested: 0.92.0)
+- django-unfold 0.52.0 to 0.85.x (0.86+ not yet supported)
 
 ## Installation
 
