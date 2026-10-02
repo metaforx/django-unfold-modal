@@ -13,6 +13,7 @@ Replaces Django admin's popup windows for related objects (ForeignKey, ManyToMan
 - Optional modal resize + size presets
 - Optional admin header suppression inside iframe
 - Django CMS modal support (open admin modals in Django CMS parent window)
+- Django Filer widget support (folder and file selection)
 - Stylable using Unfold theme configuration & custom CSS
 
 ## Motivation
@@ -22,13 +23,6 @@ It’s fine for straightforward admin use, but when exposed to users, it often c
 
 [Django Unfold](https://github.com/unfoldadmin/django-unfold) greatly improves the admin’s UX for regular users.
 This package modernizes related-object interactions while following Unfold’s design principles.
-
-> **AI Disclaimer:** Beyond the practical use of the package, the project was also driven by the incentive to explore AI-assisted research and development. All code was intentionally written by AI using structured, automated agent orchestration, including development and review by different models (Claude CLI Sonnet/Opus & Codex CLI), result verification, and regression testing.
-> 
-> Design and implementation decisions were made by me and reviewed/tested.
->
-> If interested in the process, see plans, tasks and reviews folder to get an idea of how the package was developed.
-
 
 ## Requirements
 
@@ -186,6 +180,7 @@ Regular `UNFOLD_MODAL_*` settings continue to apply to standard admin modal usag
 - `raw_id_fields` lookup
 - `autocomplete_fields` (Select2)
 - Related fields within inline forms
+- Django Filer folder and file selection widgets
 
 ## Testing
 
@@ -204,6 +199,14 @@ GitHub Actions runs on all PRs and pushes to `main`/`development`:
 - Playwright UI tests with Chromium
 
 Configure branch protection to require the CI check to pass before merging.
+
+## AI
+Beyond the practical use of the package, the project was also driven by the incentive to explore AI-assisted research and development. All code was intentionally written by AI using structured, automated agent orchestration. This included development and review by different models, as well as result verification and regression testing during development and deployment.
+
+The architecture and implementation was designed by me. No code entered the repository without an overview.
+
+If interested in the process, see plans, tasks and reviews folder to get an idea of how the package was developed.
+
 
 ## License
 

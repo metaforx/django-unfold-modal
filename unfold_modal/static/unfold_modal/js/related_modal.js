@@ -430,6 +430,17 @@
                 }
                 fallbackDismissRelatedLookup(fakeWin, data.chosenId);
                 break;
+            case MSG.POPUP_FILER: {
+                // django-filer dismiss convention (see popup_iframe.js); resolved against a
+                // whitelist, and absent when the parent page has no filer widget.
+                const fn = data.fn === 'dismissRelatedFolderLookupPopup'
+                    ? 'dismissRelatedFolderLookupPopup'
+                    : 'dismissRelatedImageLookupPopup';
+                if (window[fn]) {
+                    window[fn](fakeWin, ...data.args);
+                }
+                break;
+            }
         }
     }
 
