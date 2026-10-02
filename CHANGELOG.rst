@@ -8,6 +8,14 @@ This project adheres to `Semantic Versioning <https://semver.org/>`_.
 Unreleased
 ==========
 
+Compatibility:
+--------------
+
+* Cap ``django-unfold`` below 0.86 (``django-unfold>=0.52.0,<0.86``). Unfold 0.86 moved the
+  related widget's add, change, view and delete links into a dropdown menu, and the
+  Playwright suite does not open it yet. Support for newer Unfold versions follows in the
+  next release.
+
 Packaging:
 ----------
 
