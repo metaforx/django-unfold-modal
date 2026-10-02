@@ -1,13 +1,10 @@
 [project]
 name = "django-unfold-modal"
-dynamic = ["version"]
 description = "Modal-based related-object popups for django-unfold"
+authors = [{ name = "Marc Widmer", email = "marc@koga.cx" }]
+requires-python = ">=3.10"
 readme = "README.md"
 license = "MIT"
-requires-python = ">=3.10"
-authors = [
-    { name = "Marc Widmer", email = "marc@pbi.io" },
-]
 keywords = [
     "django",
     "unfold",
@@ -15,10 +12,6 @@ keywords = [
     "modal",
     "popup",
     "related widget",
-]
-dependencies = [
-    "django>=5.0",
-    "django-unfold>=0.52.0",
 ]
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -35,10 +28,27 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
 ]
+dependencies = [
+    "django>=5.0",
+    "django-unfold>=0.52.0",
+]
+dynamic = ["version"]
 
 [project.urls]
 Homepage = "https://github.com/metaforx/django-unfold-modal"
 Repository = "https://github.com/metaforx/django-unfold-modal"
+
+[dependency-groups]
+test = [
+    "pytest>=8.0",
+    "pytest-django>=4.5",
+    "pytest-playwright>=0.4",
+    "pytest-env>=1.2.0,<2",
+]
+dev = ["ruff>=0.4"]
+
+[tool.uv]
+default-groups = "all"
 
 [build-system]
 requires = ["hatchling"]
@@ -49,26 +59,6 @@ packages = ["unfold_modal"]
 
 [tool.hatch.version]
 path = "unfold_modal/__init__.py"
-
-# Poetry for dependency management (dev/test)
-[tool.poetry]
-name = "django-unfold-modal"
-description = "Modal-based related-object popups for django-unfold"
-package-mode = false
-
-[tool.poetry.dependencies]
-python = ">=3.10"
-django = ">=5.0"
-django-unfold = ">=0.52.0"
-
-[tool.poetry.group.test.dependencies]
-pytest = ">=8.0"
-pytest-django = ">=4.5"
-pytest-playwright = ">=0.4"
-pytest-env = "^1.2.0"
-
-[tool.poetry.group.dev.dependencies]
-ruff = ">=0.4"
 
 [tool.pytest.ini_options]
 addopts = """\
