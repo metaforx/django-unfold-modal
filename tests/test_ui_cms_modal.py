@@ -11,6 +11,7 @@ import pytest
 from playwright.sync_api import expect
 
 from testapp.models import Publisher
+from tests.ui_helpers import click_related, wait_related_ready
 
 
 @pytest.mark.django_db(transaction=True)
@@ -39,14 +40,14 @@ class TestCmsModalHost:
         cms_iframe = page.frame_locator("#cms-iframe")
 
         # Wait for admin form to load inside iframe
-        cms_iframe.locator("#add_id_category").wait_for(state="visible", timeout=10000)
+        wait_related_ready(cms_iframe, "category", timeout=10000)
 
         # Track popup windows
         popup_opened = []
         page.on("popup", lambda p: popup_opened.append(p))
 
         # Click add button for category (ForeignKey)
-        cms_iframe.locator("#add_id_category").click()
+        click_related(cms_iframe, "add", "category")
 
         # Modal overlay should appear in the PARENT document (not in iframe)
         parent_overlay = page.locator(".unfold-modal-overlay")
@@ -80,10 +81,10 @@ class TestCmsModalHost:
         page.wait_for_load_state("networkidle")
 
         cms_iframe = page.frame_locator("#cms-iframe")
-        cms_iframe.locator("#add_id_category").wait_for(state="visible", timeout=10000)
+        wait_related_ready(cms_iframe, "category", timeout=10000)
 
         # Click add button
-        cms_iframe.locator("#add_id_category").click()
+        click_related(cms_iframe, "add", "category")
 
         # Wait for modal in parent
         expect(page.locator(".unfold-modal-overlay")).to_be_visible(timeout=5000)
@@ -111,8 +112,8 @@ class TestCmsModalHost:
         page.wait_for_load_state("networkidle")
 
         cms_iframe = page.frame_locator("#cms-iframe")
-        cms_iframe.locator("#add_id_category").wait_for(state="visible", timeout=10000)
-        cms_iframe.locator("#add_id_category").click()
+        wait_related_ready(cms_iframe, "category", timeout=10000)
+        click_related(cms_iframe, "add", "category")
 
         # Wait for modal container in parent
         container = page.locator(".unfold-modal-container")
@@ -181,9 +182,9 @@ class TestCmsModalRegression:
         page.wait_for_load_state("networkidle")
 
         sideframe = page.frame_locator("#sideframe")
-        sideframe.locator("#add_id_category").wait_for(state="visible", timeout=10000)
+        wait_related_ready(sideframe, "category", timeout=10000)
 
-        sideframe.locator("#add_id_category").click()
+        click_related(sideframe, "add", "category")
 
         # Modal should appear INSIDE the iframe (not in parent)
         iframe_overlay = sideframe.locator(".unfold-modal-overlay")
@@ -200,7 +201,7 @@ class TestCmsModalRegression:
         page = authenticated_page
         page.goto(f"{live_server.url}/admin/testapp/book/add/")
 
-        page.click("#add_id_category")
+        click_related(page, "add", "category")
 
         overlay = page.locator(".unfold-modal-overlay")
         expect(overlay).to_be_visible(timeout=5000)

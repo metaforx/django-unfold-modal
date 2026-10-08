@@ -1,8 +1,11 @@
 """Playwright UI tests for dark mode modal styling."""
 
 import re
+
 import pytest
 from playwright.sync_api import expect
+
+from tests.ui_helpers import click_related
 
 
 def parse_color(color_str):
@@ -66,7 +69,7 @@ class TestDarkModeModal:
         page.evaluate("document.documentElement.classList.add('dark')")
 
         # Open modal
-        page.click("#add_id_category")
+        click_related(page, "add", "category")
 
         # Wait for modal
         container = page.locator(".unfold-modal-container")
@@ -93,7 +96,7 @@ class TestDarkModeModal:
         page.evaluate("document.documentElement.classList.add('dark')")
 
         # Open modal
-        page.click("#add_id_category")
+        click_related(page, "add", "category")
 
         header = page.locator(".unfold-modal-header")
         expect(header).to_be_visible()
@@ -122,7 +125,7 @@ class TestDarkModeModal:
         page.evaluate("document.documentElement.classList.add('dark')")
 
         # Open modal
-        page.click("#add_id_category")
+        click_related(page, "add", "category")
 
         title = page.locator(".unfold-modal-title")
         expect(title).to_be_visible()
@@ -148,7 +151,7 @@ class TestDarkModeModal:
         page.evaluate("document.documentElement.classList.add('dark')")
 
         # Open modal
-        page.click("#add_id_category")
+        click_related(page, "add", "category")
 
         close_btn = page.locator(".unfold-modal-close")
         expect(close_btn).to_be_visible()
@@ -174,7 +177,7 @@ class TestDarkModeModal:
         page.evaluate("document.documentElement.classList.remove('dark')")
 
         # Open modal
-        page.click("#add_id_category")
+        click_related(page, "add", "category")
 
         container = page.locator(".unfold-modal-container")
         expect(container).to_be_visible()

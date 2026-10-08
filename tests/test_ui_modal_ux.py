@@ -3,6 +3,8 @@
 import pytest
 from playwright.sync_api import expect
 
+from tests.ui_helpers import click_related
+
 
 @pytest.mark.django_db(transaction=True)
 class TestModalTitlebar:
@@ -14,7 +16,7 @@ class TestModalTitlebar:
         page.goto(f"{live_server.url}/admin/testapp/book/add/")
 
         # Open modal
-        page.click("#add_id_category")
+        click_related(page, "add", "category")
         page.wait_for_selector(".unfold-modal-overlay")
         page.wait_for_timeout(200)
 
@@ -27,7 +29,7 @@ class TestModalTitlebar:
         page.goto(f"{live_server.url}/admin/testapp/book/add/")
 
         # Open modal
-        page.click("#add_id_category")
+        click_related(page, "add", "category")
         page.wait_for_selector(".unfold-modal-overlay")
 
         # Wait for iframe to load
@@ -45,7 +47,7 @@ class TestModalTitlebar:
         page = authenticated_page
         page.goto(f"{live_server.url}/admin/testapp/book/add/")
 
-        page.click("#add_id_category")
+        click_related(page, "add", "category")
         page.wait_for_selector(".unfold-modal-overlay")
         page.wait_for_timeout(200)
 
@@ -63,7 +65,7 @@ class TestModalMaximize:
         page = authenticated_page
         page.goto(f"{live_server.url}/admin/testapp/book/add/")
 
-        page.click("#add_id_category")
+        click_related(page, "add", "category")
         page.wait_for_selector(".unfold-modal-overlay")
         page.wait_for_timeout(200)
 
@@ -75,7 +77,7 @@ class TestModalMaximize:
         page = authenticated_page
         page.goto(f"{live_server.url}/admin/testapp/book/add/")
 
-        page.click("#add_id_category")
+        click_related(page, "add", "category")
         page.wait_for_selector(".unfold-modal-overlay")
         page.wait_for_timeout(200)
 
@@ -98,7 +100,7 @@ class TestModalMaximize:
         page = authenticated_page
         page.goto(f"{live_server.url}/admin/testapp/book/add/")
 
-        page.click("#add_id_category")
+        click_related(page, "add", "category")
         page.wait_for_selector(".unfold-modal-overlay")
         page.wait_for_timeout(200)
 
@@ -121,7 +123,7 @@ class TestModalMaximize:
         page = authenticated_page
         page.goto(f"{live_server.url}/admin/testapp/book/add/")
 
-        page.click("#add_id_category")
+        click_related(page, "add", "category")
         page.wait_for_selector(".unfold-modal-overlay")
         page.wait_for_timeout(200)
 
@@ -150,7 +152,7 @@ class TestModalResizeUX:
         page = authenticated_page
         page.goto(f"{live_server.url}/admin/testapp/book/add/")
 
-        page.click("#add_id_category")
+        click_related(page, "add", "category")
         page.wait_for_selector(".unfold-modal-overlay")
         page.wait_for_timeout(200)
 
@@ -169,13 +171,13 @@ class TestModalStackUX:
         page.goto(f"{live_server.url}/admin/testapp/event/add/")
 
         # Open first modal (Venue)
-        page.click("#add_id_venue")
+        click_related(page, "add", "venue")
         page.wait_for_selector(".unfold-modal-overlay")
         page.wait_for_timeout(300)
 
         # Open nested modal (City)
         first_iframe = page.frame_locator(".unfold-modal-iframe").first
-        first_iframe.locator("#add_id_city").click()
+        click_related(first_iframe, "add", "city")
         page.wait_for_timeout(500)
 
         # Should have 2 modals
@@ -197,13 +199,13 @@ class TestModalStackUX:
         page.goto(f"{live_server.url}/admin/testapp/event/add/")
 
         # Open first modal
-        page.click("#add_id_venue")
+        click_related(page, "add", "venue")
         page.wait_for_selector(".unfold-modal-overlay")
         page.wait_for_timeout(300)
 
         # Open nested modal
         first_iframe = page.frame_locator(".unfold-modal-iframe").first
-        first_iframe.locator("#add_id_city").click()
+        click_related(first_iframe, "add", "city")
         page.wait_for_timeout(500)
 
         # Close nested modal
@@ -224,7 +226,7 @@ class TestModalResizeDrag:
         page = authenticated_page
         page.goto(f"{live_server.url}/admin/testapp/book/add/")
 
-        page.click("#add_id_category")
+        click_related(page, "add", "category")
         page.wait_for_selector(".unfold-modal-overlay")
         page.wait_for_timeout(300)
 
@@ -264,7 +266,7 @@ class TestModalFullscreenPersistence:
         page.goto(f"{live_server.url}/admin/testapp/event/add/")
 
         # Open first modal (Venue)
-        page.click("#add_id_venue")
+        click_related(page, "add", "venue")
         page.wait_for_selector(".unfold-modal-overlay")
         page.wait_for_timeout(300)
 
@@ -284,7 +286,7 @@ class TestModalFullscreenPersistence:
 
         # Open nested modal (City)
         first_iframe = page.frame_locator(".unfold-modal-iframe").first
-        first_iframe.locator("#add_id_city").click()
+        click_related(first_iframe, "add", "city")
         page.wait_for_timeout(500)
 
         # Should have 2 modals now
@@ -310,7 +312,7 @@ class TestModalFullscreenPersistence:
         page.goto(f"{live_server.url}/admin/testapp/event/add/")
 
         # Open first modal
-        page.click("#add_id_venue")
+        click_related(page, "add", "venue")
         page.wait_for_selector(".unfold-modal-overlay")
         page.wait_for_timeout(300)
 
@@ -326,7 +328,7 @@ class TestModalFullscreenPersistence:
 
         # Open nested modal
         first_iframe = page.frame_locator(".unfold-modal-iframe").first
-        first_iframe.locator("#add_id_city").click()
+        click_related(first_iframe, "add", "city")
         page.wait_for_timeout(500)
 
         # Close nested modal
@@ -355,13 +357,13 @@ class TestOverlayNoDoubleFlicker:
         page.goto(f"{live_server.url}/admin/testapp/event/add/")
 
         # Open first modal
-        page.click("#add_id_venue")
+        click_related(page, "add", "venue")
         page.wait_for_selector(".unfold-modal-overlay")
         page.wait_for_timeout(300)
 
         # Open nested modal
         first_iframe = page.frame_locator(".unfold-modal-iframe").first
-        first_iframe.locator("#add_id_city").click()
+        click_related(first_iframe, "add", "city")
         page.wait_for_timeout(500)
 
         # Get reference to second overlay
@@ -385,7 +387,7 @@ class TestModalHeaderLayout:
         page = authenticated_page
         page.goto(f"{live_server.url}/admin/testapp/book/add/")
 
-        page.click("#add_id_category")
+        click_related(page, "add", "category")
         page.wait_for_selector(".unfold-modal-overlay")
         page.wait_for_timeout(200)
 
@@ -404,7 +406,7 @@ class TestModalHeaderLayout:
         page = authenticated_page
         page.goto(f"{live_server.url}/admin/testapp/book/add/")
 
-        page.click("#add_id_category")
+        click_related(page, "add", "category")
         page.wait_for_selector(".unfold-modal-overlay")
         page.wait_for_timeout(200)
 
@@ -432,7 +434,7 @@ class TestModalResizeBeyondPreset:
         page = authenticated_page
         page.goto(f"{live_server.url}/admin/testapp/book/add/")
 
-        page.click("#add_id_category")
+        click_related(page, "add", "category")
         page.wait_for_selector(".unfold-modal-overlay")
         page.wait_for_timeout(200)
 
@@ -447,7 +449,7 @@ class TestModalResizeBeyondPreset:
         page = authenticated_page
         page.goto(f"{live_server.url}/admin/testapp/book/add/")
 
-        page.click("#add_id_category")
+        click_related(page, "add", "category")
         page.wait_for_selector(".unfold-modal-overlay")
         page.wait_for_timeout(200)
 

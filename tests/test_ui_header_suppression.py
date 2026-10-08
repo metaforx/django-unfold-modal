@@ -3,6 +3,7 @@
 import pytest
 from playwright.sync_api import expect
 
+from tests.ui_helpers import click_related, wait_related_ready
 
 # Constants matching modal_core.js SELECTORS
 HEADER_INNER_ID = "header-inner"
@@ -73,7 +74,7 @@ class TestHeaderSuppression:
         page.goto(f"{live_server.url}/admin/testapp/book/add/")
 
         # Open modal
-        page.click("#add_id_category")
+        click_related(page, "add", "category")
 
         # Wait for modal and iframe to load
         iframe = page.frame_locator(".unfold-modal-iframe")
@@ -98,7 +99,7 @@ class TestHeaderSuppression:
         page.goto(f"{live_server.url}/admin/testapp/book/add/")
 
         # Open modal
-        page.click("#add_id_category")
+        click_related(page, "add", "category")
 
         # Wait for modal and iframe to load
         iframe = page.frame_locator(".unfold-modal-iframe")
@@ -118,7 +119,7 @@ class TestHeaderSuppression:
         page.goto(f"{live_server.url}/admin/testapp/book/add/")
 
         # Open modal
-        page.click("#add_id_category")
+        click_related(page, "add", "category")
 
         # Wait for modal and iframe to load
         iframe = page.frame_locator(".unfold-modal-iframe")
@@ -148,7 +149,7 @@ class TestHeaderSuppression:
         expect(header_inner).to_be_visible()
 
         # Open modal
-        page.click("#add_id_category")
+        click_related(page, "add", "category")
         page.wait_for_selector(".unfold-modal-overlay")
 
         # Parent header should still be visible (not affected by iframe header hiding)
@@ -160,7 +161,7 @@ class TestHeaderSuppression:
         page.goto(f"{live_server.url}/admin/testapp/venue/add/")
 
         # Open first modal (City form)
-        page.click("#add_id_city")
+        click_related(page, "add", "city")
         page.wait_for_selector(".unfold-modal-iframe")
         page.wait_for_timeout(500)
 
@@ -173,8 +174,8 @@ class TestHeaderSuppression:
 
         # Open nested modal (Country form) from within City form
         iframe_a = page.frame_locator(".unfold-modal-iframe")
-        iframe_a.locator("#add_id_country").wait_for(state="visible", timeout=5000)
-        iframe_a.locator("#add_id_country").click()
+        wait_related_ready(iframe_a, "country", timeout=5000)
+        click_related(iframe_a, "add", "country")
         page.wait_for_timeout(500)
 
         # Check nested modal header is also hidden (use last iframe)

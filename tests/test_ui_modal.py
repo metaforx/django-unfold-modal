@@ -5,6 +5,8 @@ from playwright.sync_api import expect
 
 from testapp.models import Author, Category, Publisher
 
+from tests.ui_helpers import click_related
+
 
 @pytest.fixture
 def category(db):
@@ -34,7 +36,7 @@ class TestModalDOMStructure:
         page.goto(f"{live_server.url}/admin/testapp/book/add/")
 
         # Click add button for category (ForeignKey select)
-        page.click("#add_id_category")
+        click_related(page, "add", "category")
 
         # Wait for modal overlay to appear
         overlay = page.locator(".unfold-modal-overlay")
@@ -45,7 +47,7 @@ class TestModalDOMStructure:
         page = authenticated_page
         page.goto(f"{live_server.url}/admin/testapp/book/add/")
 
-        page.click("#add_id_category")
+        click_related(page, "add", "category")
 
         container = page.locator(".unfold-modal-container")
         expect(container).to_be_visible()
@@ -55,7 +57,7 @@ class TestModalDOMStructure:
         page = authenticated_page
         page.goto(f"{live_server.url}/admin/testapp/book/add/")
 
-        page.click("#add_id_category")
+        click_related(page, "add", "category")
 
         iframe = page.locator(".unfold-modal-iframe")
         expect(iframe).to_be_visible()
@@ -69,7 +71,7 @@ class TestModalDOMStructure:
         page = authenticated_page
         page.goto(f"{live_server.url}/admin/testapp/book/add/")
 
-        page.click("#add_id_category")
+        click_related(page, "add", "category")
 
         # Wait for modal
         page.wait_for_selector(".unfold-modal-overlay")
@@ -83,7 +85,7 @@ class TestModalDOMStructure:
         page = authenticated_page
         page.goto(f"{live_server.url}/admin/testapp/book/add/")
 
-        page.click("#add_id_category")
+        click_related(page, "add", "category")
         page.wait_for_selector(".unfold-modal-overlay")
 
         # Close modal with ESC
@@ -107,7 +109,7 @@ class TestAddRelatedFromSelect:
         page.goto(f"{live_server.url}/admin/testapp/book/add/")
 
         # Click add button for category
-        page.click("#add_id_category")
+        click_related(page, "add", "category")
 
         # Wait for modal iframe
         iframe = page.frame_locator(".unfold-modal-iframe")
@@ -150,7 +152,7 @@ class TestChangeRelatedAutocomplete:
         page.wait_for_timeout(200)
 
         # Now click change button
-        page.click("#change_id_author")
+        click_related(page, "change", "author")
 
         # Wait for modal
         iframe = page.frame_locator(".unfold-modal-iframe")
@@ -207,7 +209,7 @@ class TestValidationError:
         page.goto(f"{live_server.url}/admin/testapp/book/add/")
 
         # Click add button for category
-        page.click("#add_id_category")
+        click_related(page, "add", "category")
 
         iframe = page.frame_locator(".unfold-modal-iframe")
 
@@ -244,15 +246,18 @@ class TestInlineFormRelatedField:
                 add_row.click()
                 page.wait_for_timeout(300)
 
-        # Click add button for editor in the inline
-        # The inline editor field should have an add button
-        add_editor_btn = page.locator(
-            '#chapters-0 [id^="add_id_chapters-0-editor"], '
-            '.inline-related [id*="add"][id*="editor"]'
-        ).first
+        # Check presence, not visibility: the link may sit in a closed dropdown.
+        editor_name = "chapters-0-editor"
+        add_editor_present = (
+            page.locator(
+                f"#add_id_{editor_name}, "
+                f'[x-ref="relatedWidgetWrapper{editor_name}"]'
+            ).count()
+            > 0
+        )
 
-        if add_editor_btn.is_visible():
-            add_editor_btn.click()
+        if add_editor_present:
+            click_related(page, "add", editor_name)
 
             # Wait for modal
             iframe = page.frame_locator(".unfold-modal-iframe")
@@ -282,7 +287,7 @@ class TestModalInteractions:
         page = authenticated_page
         page.goto(f"{live_server.url}/admin/testapp/book/add/")
 
-        page.click("#add_id_category")
+        click_related(page, "add", "category")
         page.wait_for_selector(".unfold-modal-overlay")
 
         # Wait for modal open animation to complete
@@ -297,7 +302,7 @@ class TestModalInteractions:
         page = authenticated_page
         page.goto(f"{live_server.url}/admin/testapp/book/add/")
 
-        page.click("#add_id_category")
+        click_related(page, "add", "category")
 
         overlay = page.locator(".unfold-modal-overlay")
         expect(overlay).to_be_visible()
@@ -312,7 +317,7 @@ class TestModalInteractions:
         page = authenticated_page
         page.goto(f"{live_server.url}/admin/testapp/book/add/")
 
-        page.click("#add_id_category")
+        click_related(page, "add", "category")
         page.wait_for_selector(".unfold-modal-overlay")
 
         page.click(".unfold-modal-close")
