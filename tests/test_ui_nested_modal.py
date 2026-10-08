@@ -3,6 +3,8 @@
 import pytest
 from playwright.sync_api import expect
 
+from tests.ui_helpers import click_related, wait_related_ready
+
 
 @pytest.mark.django_db(transaction=True)
 class TestNestedModalStack:
@@ -14,7 +16,7 @@ class TestNestedModalStack:
         page.goto(f"{live_server.url}/admin/testapp/venue/add/")
 
         # Open modal A: click "Add City" from Venue form
-        page.click("#add_id_city")
+        click_related(page, "add", "city")
         page.wait_for_selector(".unfold-modal-overlay")
         page.wait_for_timeout(300)  # wait for iframe to load
 
@@ -24,8 +26,8 @@ class TestNestedModalStack:
 
         # Inside modal A (City form), click "Add Country"
         iframe_a = page.frame_locator(".unfold-modal-iframe")
-        iframe_a.locator("#add_id_country").wait_for(state="visible", timeout=5000)
-        iframe_a.locator("#add_id_country").click()
+        wait_related_ready(iframe_a, "country", timeout=5000)
+        click_related(iframe_a, "add", "country")
 
         # Wait for modal B to appear
         page.wait_for_timeout(500)
@@ -53,7 +55,7 @@ class TestNestedModalStack:
         assert depth == 0
 
         # Open modal A
-        page.click("#add_id_city")
+        click_related(page, "add", "city")
         page.wait_for_selector(".unfold-modal-overlay")
         page.wait_for_timeout(300)
 
@@ -62,8 +64,8 @@ class TestNestedModalStack:
 
         # Open modal B from within A
         iframe_a = page.frame_locator(".unfold-modal-iframe")
-        iframe_a.locator("#add_id_country").wait_for(state="visible", timeout=5000)
-        iframe_a.locator("#add_id_country").click()
+        wait_related_ready(iframe_a, "country", timeout=5000)
+        click_related(iframe_a, "add", "country")
         page.wait_for_timeout(500)
 
         depth = page.evaluate("window.UnfoldModal.stackDepth()")
@@ -75,14 +77,14 @@ class TestNestedModalStack:
         page.goto(f"{live_server.url}/admin/testapp/venue/add/")
 
         # Open modal A
-        page.click("#add_id_city")
+        click_related(page, "add", "city")
         page.wait_for_selector(".unfold-modal-overlay")
         page.wait_for_timeout(300)
 
         # Open modal B from within A
         iframe_a = page.frame_locator(".unfold-modal-iframe")
-        iframe_a.locator("#add_id_country").wait_for(state="visible", timeout=5000)
-        iframe_a.locator("#add_id_country").click()
+        wait_related_ready(iframe_a, "country", timeout=5000)
+        click_related(iframe_a, "add", "country")
         page.wait_for_timeout(500)
 
         # Close modal B via close button (last close button in DOM)
@@ -106,14 +108,14 @@ class TestNestedModalStack:
         page.goto(f"{live_server.url}/admin/testapp/venue/add/")
 
         # Open modal A (City form)
-        page.click("#add_id_city")
+        click_related(page, "add", "city")
         page.wait_for_selector(".unfold-modal-overlay")
         page.wait_for_timeout(300)
 
         # Open modal B (Country form) from within City form
         iframe_a = page.frame_locator(".unfold-modal-iframe")
-        iframe_a.locator("#add_id_country").wait_for(state="visible", timeout=5000)
-        iframe_a.locator("#add_id_country").click()
+        wait_related_ready(iframe_a, "country", timeout=5000)
+        click_related(iframe_a, "add", "country")
         page.wait_for_timeout(500)
 
         # Fill and save the Country form in modal B
@@ -142,14 +144,14 @@ class TestNestedModalStack:
         page.goto(f"{live_server.url}/admin/testapp/venue/add/")
 
         # Open modal A (City form)
-        page.click("#add_id_city")
+        click_related(page, "add", "city")
         page.wait_for_selector(".unfold-modal-overlay")
         page.wait_for_timeout(300)
 
         # Open modal B (Country form)
         iframe_a = page.frame_locator(".unfold-modal-iframe")
-        iframe_a.locator("#add_id_country").wait_for(state="visible", timeout=5000)
-        iframe_a.locator("#add_id_country").click()
+        wait_related_ready(iframe_a, "country", timeout=5000)
+        click_related(iframe_a, "add", "country")
         page.wait_for_timeout(500)
 
         # Save Country in modal B
@@ -178,14 +180,14 @@ class TestNestedModalStack:
         page.goto(f"{live_server.url}/admin/testapp/venue/add/")
 
         # Open modal A
-        page.click("#add_id_city")
+        click_related(page, "add", "city")
         page.wait_for_selector(".unfold-modal-overlay")
         page.wait_for_timeout(300)
 
         # Open modal B
         iframe_a = page.frame_locator(".unfold-modal-iframe")
-        iframe_a.locator("#add_id_country").wait_for(state="visible", timeout=5000)
-        iframe_a.locator("#add_id_country").click()
+        wait_related_ready(iframe_a, "country", timeout=5000)
+        click_related(iframe_a, "add", "country")
         page.wait_for_timeout(500)
         assert page.evaluate("window.UnfoldModal.stackDepth()") == 2
 
@@ -203,14 +205,14 @@ class TestNestedModalStack:
         page.goto(f"{live_server.url}/admin/testapp/venue/add/")
 
         # Open modal A
-        page.click("#add_id_city")
+        click_related(page, "add", "city")
         page.wait_for_selector(".unfold-modal-overlay")
         page.wait_for_timeout(300)
 
         # Open modal B
         iframe_a = page.frame_locator(".unfold-modal-iframe")
-        iframe_a.locator("#add_id_country").wait_for(state="visible", timeout=5000)
-        iframe_a.locator("#add_id_country").click()
+        wait_related_ready(iframe_a, "country", timeout=5000)
+        click_related(iframe_a, "add", "country")
         page.wait_for_timeout(500)
         assert page.evaluate("window.UnfoldModal.stackDepth()") == 2
 
@@ -232,14 +234,14 @@ class TestNestedModalStack:
         page.goto(f"{live_server.url}/admin/testapp/venue/add/")
 
         # Open modal A
-        page.click("#add_id_city")
+        click_related(page, "add", "city")
         page.wait_for_selector(".unfold-modal-overlay")
         page.wait_for_timeout(300)
 
         # Open modal B
         iframe_a = page.frame_locator(".unfold-modal-iframe")
-        iframe_a.locator("#add_id_country").wait_for(state="visible", timeout=5000)
-        iframe_a.locator("#add_id_country").click()
+        wait_related_ready(iframe_a, "country", timeout=5000)
+        click_related(iframe_a, "add", "country")
         page.wait_for_timeout(500)
         assert page.evaluate("window.UnfoldModal.stackDepth()") == 2
 
@@ -256,7 +258,7 @@ class TestNestedModalStack:
         page.goto(f"{live_server.url}/admin/testapp/venue/add/")
 
         # Open modal A
-        page.click("#add_id_city")
+        click_related(page, "add", "city")
         page.wait_for_selector(".unfold-modal-overlay")
         page.wait_for_timeout(300)
 
@@ -265,8 +267,8 @@ class TestNestedModalStack:
 
         # Open modal B
         iframe_a = page.frame_locator(".unfold-modal-iframe")
-        iframe_a.locator("#add_id_country").wait_for(state="visible", timeout=5000)
-        iframe_a.locator("#add_id_country").click()
+        wait_related_ready(iframe_a, "country", timeout=5000)
+        click_related(iframe_a, "add", "country")
         page.wait_for_timeout(500)
 
         overflow = page.evaluate("document.body.style.overflow")
@@ -299,7 +301,7 @@ class TestIframeScrolling:
         page.goto(f"{live_server.url}/admin/testapp/event/add/")
 
         # Open modal for adding a venue (related widget)
-        page.click("#add_id_venue")
+        click_related(page, "add", "venue")
         page.wait_for_selector(".unfold-modal-overlay")
         page.wait_for_timeout(500)
 
@@ -324,7 +326,7 @@ class TestIframeScrolling:
         page.goto(f"{live_server.url}/admin/testapp/city/add/")
 
         # Open Country add modal
-        page.click("#add_id_country")
+        click_related(page, "add", "country")
         page.wait_for_selector(".unfold-modal-overlay")
         page.wait_for_timeout(500)
 

@@ -1,4 +1,6 @@
 from django.db import models
+from filer.fields.file import FilerFileField
+from filer.fields.folder import FilerFolderField
 
 
 class Category(models.Model):
@@ -62,6 +64,24 @@ class Book(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class MediaAsset(models.Model):
+    """django-filer file and folder fields plus a plain FK, for widget tests."""
+
+    name = models.CharField(max_length=100)
+    file = FilerFileField(
+        null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
+    )
+    folder = FilerFolderField(
+        null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
+    )
+    category = models.ForeignKey(
+        Category, on_delete=models.SET_NULL, null=True, blank=True
+    )
+
+    def __str__(self):
+        return self.name
 
 
 class Chapter(models.Model):

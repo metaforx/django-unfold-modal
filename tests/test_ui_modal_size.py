@@ -3,6 +3,8 @@
 import pytest
 from playwright.sync_api import expect
 
+from tests.ui_helpers import click_related
+
 
 @pytest.mark.django_db(transaction=True)
 class TestModalSizeConfigured:
@@ -14,7 +16,7 @@ class TestModalSizeConfigured:
         page.goto(f"{live_server.url}/admin/testapp/book/add/")
 
         # Open modal
-        page.click("#add_id_category")
+        click_related(page, "add", "category")
         page.wait_for_selector(".unfold-modal-overlay")
         page.wait_for_timeout(200)
 

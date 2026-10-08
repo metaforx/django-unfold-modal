@@ -29,6 +29,11 @@ class TestCmsModalHeadHtml:
         html = get_cms_modal_head_html()
         assert "unfold_modal/js/cms_host.js" in html
 
+    def test_does_not_include_related_adapter_js(self):
+        """The click adapter belongs on admin pages, not on the CMS host page."""
+        html = get_cms_modal_head_html()
+        assert "unfold_related_adapter.js" not in html
+
     def test_includes_inline_config(self):
         html = get_cms_modal_head_html()
         assert "window.UNFOLD_MODAL_CONFIG" in html

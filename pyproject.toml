@@ -30,7 +30,7 @@ classifiers = [
 ]
 dependencies = [
     "django>=5.0",
-    "django-unfold>=0.52.0,<0.86",
+    "django-unfold>=0.52.0,<0.109",
 ]
 dynamic = ["version"]
 
@@ -44,6 +44,7 @@ test = [
     "pytest-django>=4.5",
     "pytest-playwright>=0.4",
     "pytest-env>=1.2.0,<2",
+    "django-filer>=3.0",
 ]
 dev = ["ruff>=0.4"]
 

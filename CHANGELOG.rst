@@ -11,10 +11,68 @@ Unreleased
 Compatibility:
 --------------
 
-* Cap ``django-unfold`` below 0.86 (``django-unfold>=0.52.0,<0.86``). Unfold 0.86 moved the
-  related widget's add, change, view and delete links into a dropdown menu, and the
-  Playwright suite does not open it yet. Support for newer Unfold versions follows in the
-  next release.
+* Raise the ``django-unfold`` cap to 0.109 (``django-unfold>=0.52.0,<0.109``), covering the
+  related widget's dropdown menu (0.86) and Unfold's own native related modals (0.107).
+  unfold-modal keeps working alongside the native modals; see the ``Features`` entry below.
+
+Features:
+---------
+
+* Add the ``UNFOLD_MODAL_OVERRIDE_NATIVE`` setting (default ``True``). ``True`` keeps
+  unfold-modal handling every related popup, including on Unfold 0.107+, where Unfold would
+  otherwise open its own native modal; existing projects need no change on upgrade. Set it
+  to ``False`` to let Unfold's native modal handle related popups on normal admin pages,
+  while unfold-modal keeps modals opened from a CMS-hosted admin, chains it started itself,
+  and Django Filer widgets. The setting has no effect on Unfold versions without native
+  related modals.
+
+Changed:
+--------
+
+* The view-related link now opens in the modal instead of navigating away. On Unfold
+  versions before 0.107, it previously left the form and navigated to the related object's
+  change page.
+
+Bug Fixes:
+----------
+
+* A related popup opened as a real browser window (``window.opener``) completes again on
+  Unfold 0.107+. The popup response now calls ``opener.dismiss*`` directly instead of
+  loading Unfold's own ``popup_response.js``, which assumes ``window.parent`` and left the
+  window stuck on "Popup closing…".
+* Lookup row selection inside the modal no longer logs an uncaught error; the selected
+  value is still written back exactly once.
+
+Other:
+------
+
+* ``admin/popup_response.html`` no longer contains inline JavaScript. The logic moved to
+  ``unfold_modal/js/popup_response.js``, loaded with data attributes like Django's own
+  template.
+* Use ``const`` / ``let`` instead of ``var`` in all JavaScript files.
+
+Tests:
+------
+
+* Add a shared related-widget click helper (``tests/ui_helpers.py``) and migrate the
+  Playwright suite to Unfold's related-widget dropdown (0.86+), so tests no longer click
+  ``#add_id_*`` / ``#change_id_*`` / ``#view_id_*`` / ``#delete_id_*`` directly.
+* Add a native-modal ownership regression suite
+  (``tests/test_ui_native_modal_ownership.py``).
+* Add real Django Filer picker tests (``tests/test_ui_filer.py``); ``django-filer`` is now a
+  test-only dependency.
+
+CI:
+---
+
+* Add ``.github/dependabot.yml`` (``uv`` ecosystem) for ``django-unfold``, ``django``,
+  ``django-filer`` and the Playwright test dependencies. Each update within the declared
+  ranges gets its own PR and the full Playwright run; the ``django-unfold`` cap is raised
+  by hand.
+* Run the workflow on uv (``astral-sh/setup-uv``, ``uv sync --frozen``) with the
+  Python 3.10 / 3.11 / 3.12 matrix.
+* Exclude the Playwright tests from the unit test step with ``--ignore-glob``. The previous
+  ``--ignore=tests/test_ui_*.py`` did not expand the pattern, so they ran in both steps.
 
 Packaging:
 ----------
@@ -22,14 +80,6 @@ Packaging:
 * Migrate dependency management from Poetry to uv. The ``test`` and ``dev`` dependencies
   move to ``[dependency-groups]``, and ``uv.lock`` replaces ``poetry.lock`` with the same
   pinned versions. Hatch remains the build backend.
-
-CI:
----
-
-* Run the workflow on uv (``astral-sh/setup-uv``, ``uv sync --frozen``) with the
-  Python 3.10 / 3.11 / 3.12 matrix.
-* Exclude the Playwright tests from the unit test step with ``--ignore-glob``. The previous
-  ``--ignore=tests/test_ui_*.py`` did not expand the pattern, so they ran in both steps.
 
 0.2.2 (2026-08-26)
 ==================
@@ -79,9 +129,9 @@ Features:
   ``UNFOLD_CMS_MODAL_DISABLE_HEADER``, independent of the ``UNFOLD_MODAL_*`` settings and
   defaulting to a fullscreen modal.
 * Add the ``UNFOLD_MODAL_SHOW_ADD_IN_POPUP`` setting (default ``True``) for hiding the
-  header "Add" link in popups. The check itself lives in django-unfold's ``add_link.html``,
-  because a template override in this package loses to ``unfold`` in ``INSTALLED_APPS``
-  order (T22, T22a).
+  header "Add" link in popups. It currently has no effect with upstream django-unfold: no
+  template or tag in this package reads it, and upstream's ``add_link.html`` has no check
+  for it either (T22, T22a).
 
 Bug Fixes:
 ----------

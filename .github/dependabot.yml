@@ -1,0 +1,23 @@
+version: 2
+updates:
+  # Packages this package's compatibility surface depends on: each update opens its own
+  # PR, so the CI run on that PR says whether the new version still passes.
+  - package-ecosystem: "uv"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+    open-pull-requests-limit: 5
+    # The upper bounds in pyproject.toml are deliberate gates; only move the lock within them.
+    versioning-strategy: lockfile-only
+    allow:
+      - dependency-name: "django-unfold"
+      - dependency-name: "django"
+      - dependency-name: "django-filer"
+      - dependency-name: "playwright"
+      - dependency-name: "pytest-playwright"
+    commit-message:
+      prefix: "chore(deps)"
+    labels:
+      - "dependencies"

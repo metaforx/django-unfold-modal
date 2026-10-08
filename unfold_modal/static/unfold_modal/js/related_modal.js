@@ -21,6 +21,11 @@
     const SHOW_RELATED_PREFIX = /^(change|add|delete|view)_/;
     const LOOKUP_PREFIX = /^lookup_/;
 
+    // Links that open through django:show-related. The view link carries no
+    // data-popup="yes"; unfold_related_adapter.js triggers the event for it.
+    const SHOW_RELATED_SELECTOR = '.related-widget-wrapper-link[data-popup="yes"], '
+        + '.related-widget-wrapper-link.view-related';
+
     // ---------------------------------------------------------------
     // Resize and Maximize
     // ---------------------------------------------------------------
@@ -608,7 +613,7 @@
         utils.setPopupIndex();
 
         // Determine if parent has CMS host module loaded (fallback to local if not)
-        var delegateToParent = state.isInIframe;
+        let delegateToParent = state.isInIframe;
         if (!delegateToParent && state.isInCmsModal) {
             try {
                 delegateToParent = !!(window.parent.UnfoldModal && window.parent.UnfoldModal.cmsHost);
@@ -619,7 +624,7 @@
 
         if (delegateToParent) {
             // Running inside a modal iframe (Unfold nested or CMS modal with host)
-            $('body').on('django:show-related', '.related-widget-wrapper-link[data-popup="yes"]', handleShowRelatedInIframe);
+            $('body').on('django:show-related', SHOW_RELATED_SELECTOR, handleShowRelatedInIframe);
             $('body').on('django:lookup-related', '.related-lookup', handleLookupRelatedInIframe);
 
             window.addEventListener('message', handleForwardedDismiss);
@@ -632,7 +637,7 @@
             });
         } else {
             // Running on the top-level page
-            $('body').on('django:show-related', '.related-widget-wrapper-link[data-popup="yes"]', handleShowRelated);
+            $('body').on('django:show-related', SHOW_RELATED_SELECTOR, handleShowRelated);
             $('body').on('django:lookup-related', '.related-lookup', handleLookupRelated);
 
             // Skip parent message handler when cms_host.js is loaded on this page.

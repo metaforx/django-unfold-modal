@@ -32,6 +32,16 @@ def get_modal_styles():
     ]
 
 
+def _related_adapter_script(request):
+    """Adapter script URL; ``#coexist`` when UNFOLD_MODAL_OVERRIDE_NATIVE is off."""
+    from unfold_modal.apps import get_setting
+
+    url = static("unfold_modal/js/unfold_related_adapter.js")
+    if not get_setting("UNFOLD_MODAL_OVERRIDE_NATIVE"):
+        url += "#coexist"
+    return url
+
+
 def get_modal_scripts():
     """
     Return a list of script callables for the modal JavaScript files.
@@ -65,6 +75,8 @@ def get_modal_scripts():
         lambda request: static("unfold_modal/js/modal_core.js"),
         # Main modal script
         lambda request: static("unfold_modal/js/related_modal.js"),
+        # Related-click ownership adapter (Unfold >=0.107 native modals)
+        _related_adapter_script,
         # Popup iframe script
         lambda request: static("unfold_modal/js/popup_iframe.js"),
     ]
@@ -98,6 +110,8 @@ def get_modal_scripts_with_config():
         lambda request: static("unfold_modal/js/modal_core.js"),
         # Main modal script
         lambda request: static("unfold_modal/js/related_modal.js"),
+        # Related-click ownership adapter (Unfold >=0.107 native modals)
+        _related_adapter_script,
         # Popup iframe script
         lambda request: static("unfold_modal/js/popup_iframe.js"),
     ]

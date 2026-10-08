@@ -8,6 +8,8 @@ iframe rather than forwarding to parent or falling back to a popup window.
 import pytest
 from playwright.sync_api import expect
 
+from tests.ui_helpers import click_related, wait_related_ready
+
 
 @pytest.mark.django_db(transaction=True)
 class TestIframeHostModal:
@@ -35,14 +37,14 @@ class TestIframeHostModal:
         sideframe = page.frame_locator("#sideframe")
 
         # Wait for admin form to load inside iframe
-        sideframe.locator("#add_id_category").wait_for(state="visible", timeout=10000)
+        wait_related_ready(sideframe, "category", timeout=10000)
 
         # Track popup windows
         popup_opened = []
         page.on("popup", lambda p: popup_opened.append(p))
 
         # Click add button for category (ForeignKey)
-        sideframe.locator("#add_id_category").click()
+        click_related(sideframe, "add", "category")
 
         # Modal overlay should appear INSIDE the iframe
         overlay = sideframe.locator(".unfold-modal-overlay")
@@ -76,10 +78,10 @@ class TestIframeHostModal:
         page.wait_for_load_state("networkidle")
 
         sideframe = page.frame_locator("#sideframe")
-        sideframe.locator("#add_id_category").wait_for(state="visible", timeout=10000)
+        wait_related_ready(sideframe, "category", timeout=10000)
 
         # Open first modal (add category)
-        sideframe.locator("#add_id_category").click()
+        click_related(sideframe, "add", "category")
         overlay = sideframe.locator(".unfold-modal-overlay")
         expect(overlay).to_be_visible(timeout=5000)
 
