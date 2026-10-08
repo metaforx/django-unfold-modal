@@ -5,8 +5,8 @@ Changelog
 All notable changes to django-unfold-modal are documented here.
 This project adheres to `Semantic Versioning <https://semver.org/>`_.
 
-Unreleased
-==========
+0.2.3 (2026-10-08)
+==================
 
 Compatibility:
 --------------
@@ -24,7 +24,7 @@ Features:
   to ``False`` to let Unfold's native modal handle related popups on normal admin pages,
   while unfold-modal keeps modals opened from a CMS-hosted admin, chains it started itself,
   and Django Filer widgets. The setting has no effect on Unfold versions without native
-  related modals.
+  related modals. (#17)
 
 Changed:
 --------
@@ -79,7 +79,7 @@ Packaging:
 
 * Migrate dependency management from Poetry to uv. The ``test`` and ``dev`` dependencies
   move to ``[dependency-groups]``, and ``uv.lock`` replaces ``poetry.lock`` with the same
-  pinned versions. Hatch remains the build backend.
+  pinned versions. Hatch remains the build backend. (#16)
 
 0.2.2 (2026-08-26)
 ==================
