@@ -28,7 +28,11 @@ This package modernizes related-object interactions while following Unfold’s d
 
 - Python 3.10+
 - Django 5.0+
-- django-unfold 0.52.0 to 0.85.x (0.86+ not yet supported)
+- django-unfold `>=0.52.0,<0.108`
+
+Tested combinations (from the locked test matrix): django-unfold 0.81.0 on Python 3.10,
+0.91.0 on Python 3.11, 0.107.0 on Python 3.12. Newer Unfold versions require Python 3.12+
+and Django 5.2+, because Unfold itself requires them.
 
 ## Installation
 
@@ -105,6 +109,9 @@ UNFOLD_MODAL_RESIZE = False
 
 # Hide admin header inside modal iframes (default: True)
 UNFOLD_MODAL_DISABLE_HEADER = True
+
+# Handle every related popup, including those Unfold 0.107+ can open natively (default: True)
+UNFOLD_MODAL_OVERRIDE_NATIVE = True
 ```
 
 ### Size Presets
@@ -129,6 +136,16 @@ To use custom size presets (`UNFOLD_MODAL_SIZE`) or enable resize (`UNFOLD_MODAL
 | `default` | 90%   | 900px     | 85vh   | 700px      |
 | `large`   | 95%   | 1200px    | 90vh   | 900px      |
 | `full`    | 98%   | none      | 95vh   | none       |
+
+## Unfold's Native Related Modals
+
+Unfold 0.107 added its own modal for related objects. unfold-modal still handles all
+related popups by default (`UNFOLD_MODAL_OVERRIDE_NATIVE = True`), so existing projects
+need no change.
+
+Set it to `False` to let Unfold handle related popups on normal admin pages. unfold-modal
+then only handles CMS-hosted admin, modal chains it started and Filer widgets. The setting
+has no effect before Unfold 0.107.
 
 ## Django CMS Integration
 
@@ -180,13 +197,19 @@ Regular `UNFOLD_MODAL_*` settings continue to apply to standard admin modal usag
 - `raw_id_fields` lookup
 - `autocomplete_fields` (Select2)
 - Related fields within inline forms
+- View-related link (opens the related object in the modal)
 - Django Filer folder and file selection widgets
+
+File and folder picking through Filer's widgets is supported in the modal. Filer's own
+edit, "New Folder" and cancel flows inside the modal need
+[django-unfold-extra](https://github.com/metaforx/django-unfold-extra)'s Filer
+integration.
 
 ## Testing
 
 ```bash
-pytest -q
-pytest --browser chromium
+uv run pytest --ignore-glob='tests/test_ui_*.py' -q
+uv run pytest tests/test_ui_*.py --browser chromium -q
 ```
 
 See `tests/README.md` for the test app overview and Playwright scope.
