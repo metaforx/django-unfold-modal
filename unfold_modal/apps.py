@@ -20,6 +20,7 @@ class UnfoldModalConfig(AppConfig):
         "UNFOLD_CMS_MODAL_RESIZE": False,  # Resize handle in CMS modal
         "UNFOLD_CMS_MODAL_DISABLE_HEADER": True,  # Hide admin header in CMS modal
         "UNFOLD_MODAL_SHOW_ADD_IN_POPUP": True,  # Show header add button in popups
+        "UNFOLD_MODAL_OVERRIDE_NATIVE": True,  # Replace Unfold's native related modals
     }
 
     # Size preset dimensions (width, maxWidth, height, maxHeight)
