@@ -28,10 +28,10 @@ This package modernizes related-object interactions while following Unfold’s d
 
 - Python 3.10+
 - Django 5.0+
-- django-unfold `>=0.52.0,<0.108`
+- django-unfold `>=0.52.0,<0.109`
 
 Tested combinations (from the locked test matrix): django-unfold 0.81.0 on Python 3.10,
-0.91.0 on Python 3.11, 0.107.0 on Python 3.12. Newer Unfold versions require Python 3.12+
+0.91.0 on Python 3.11, 0.108.0 on Python 3.12. Newer Unfold versions require Python 3.12+
 and Django 5.2+, because Unfold itself requires them.
 
 ## Installation
@@ -95,13 +95,7 @@ This setup adds a config script (served from `unfold_modal.urls`) before the cor
 The following settings are available (all optional):
 
 ```python
-# Content loading strategy: "iframe" (default, v1 only)
-UNFOLD_MODAL_VARIANT = "iframe"
-
-# Presentation style: "modal" (default, v1 only)
-UNFOLD_MODAL_PRESENTATION = "modal"
-
-# Modal size preset: "default", "large", or "full"
+# Modal size preset: "default", "large", or "full" (default: "default")
 UNFOLD_MODAL_SIZE = "default"
 
 # Enable manual resize handle on modal (default: False)

@@ -11,7 +11,7 @@ Unreleased
 Compatibility:
 --------------
 
-* Raise the ``django-unfold`` cap to 0.108 (``django-unfold>=0.52.0,<0.108``), covering the
+* Raise the ``django-unfold`` cap to 0.109 (``django-unfold>=0.52.0,<0.109``), covering the
   related widget's dropdown menu (0.86) and Unfold's own native related modals (0.107).
   unfold-modal keeps working alongside the native modals; see the ``Features`` entry below.
 
@@ -37,11 +37,11 @@ Bug Fixes:
 ----------
 
 * A related popup opened as a real browser window (``window.opener``) completes again on
-  Unfold 0.107.0. The popup response now calls ``opener.dismiss*`` directly instead of
+  Unfold 0.107+. The popup response now calls ``opener.dismiss*`` directly instead of
   loading Unfold's own ``popup_response.js``, which assumes ``window.parent`` and left the
   window stuck on "Popup closing…".
-* Lookup row selection inside the modal no longer logs an uncaught error (verified on Unfold
-  0.107.0 and 0.91.0); the selected value is still written back exactly once.
+* Lookup row selection inside the modal no longer logs an uncaught error; the selected
+  value is still written back exactly once.
 
 Other:
 ------

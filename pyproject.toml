@@ -30,7 +30,7 @@ classifiers = [
 ]
 dependencies = [
     "django>=5.0",
-    "django-unfold>=0.52.0,<0.108",
+    "django-unfold>=0.52.0,<0.109",
 ]
 dynamic = ["version"]
 
