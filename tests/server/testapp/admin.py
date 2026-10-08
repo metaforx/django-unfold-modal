@@ -1,5 +1,5 @@
 from django.contrib import admin
-
+from filer.fields.folder import FilerFolderField
 from unfold.admin import ModelAdmin, TabularInline
 
 from .models import (
@@ -10,6 +10,7 @@ from .models import (
     City,
     Country,
     Event,
+    MediaAsset,
     Publisher,
     Tag,
     Venue,
@@ -121,6 +122,15 @@ class VenueAdmin(ModelAdmin):
     search_fields = ["name", "address"]
     list_filter = ["city__country"]
     # city is normal FK select (not autocomplete) to expose add/change links
+
+
+@admin.register(MediaAsset)
+class MediaAssetAdmin(ModelAdmin):
+    """Filer widgets plus a plain FK; the override avoids Unfold's empty_label."""
+
+    list_display = ["name", "file", "folder", "category"]
+    fields = ["name", "file", "folder", "category"]
+    formfield_overrides = {FilerFolderField: {"widget": None}}
 
 
 @admin.register(Event)

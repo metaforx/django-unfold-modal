@@ -1,7 +1,9 @@
+import tempfile
 from os import environ
 from pathlib import Path
 
 from django.core.management.utils import get_random_secret_key
+
 from unfold_modal.utils import get_modal_scripts_with_config, get_modal_styles
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -24,8 +26,14 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "easy_thumbnails",
+    "filer",
     "testapp",
 ]
+
+# Isolated, outside the repo; nothing Filer writes ends up tracked in git.
+MEDIA_ROOT = tempfile.mkdtemp(prefix="unfold-modal-filer-")
+MEDIA_URL = "/media/"
 
 # Django Unfold Modal settings
 UNFOLD_MODAL_SIZE = "large"

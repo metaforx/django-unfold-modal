@@ -1,5 +1,7 @@
 from html import escape as html_escape
 
+from django.conf import settings
+from django.conf.urls.static import static
 from django.contrib import admin
 from django.http import HttpResponse
 from django.urls import include, path
@@ -55,4 +57,4 @@ urlpatterns = [
     path("unfold-modal/", include("unfold_modal.urls")),
     path("iframe-host/", iframe_host_view, name="iframe_host"),
     path("cms-modal-host/", cms_modal_host_view, name="cms_modal_host"),
-]
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
