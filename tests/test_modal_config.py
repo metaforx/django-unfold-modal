@@ -67,3 +67,27 @@ class TestModalConfig:
         response = client.get("/unfold-modal/config.js")
         content = response.content.decode()
         assert '"disableHeader": false' in content
+
+
+@pytest.mark.django_db
+class TestOverrideNativeInAdmin:
+    """UNFOLD_MODAL_OVERRIDE_NATIVE as rendered into admin pages."""
+
+    ADAPTER = "unfold_modal/js/unfold_related_adapter.js"
+
+    def test_admin_page_loads_adapter_without_fragment(self, admin_client):
+        content = admin_client.get("/admin/testapp/book/add/").content.decode()
+        assert f'{self.ADAPTER}"' in content
+        assert "#coexist" not in content
+
+    @override_settings(UNFOLD_MODAL_OVERRIDE_NATIVE=False)
+    def test_admin_page_loads_adapter_with_coexist_fragment(self, admin_client):
+        content = admin_client.get("/admin/testapp/book/add/").content.decode()
+        assert f'{self.ADAPTER}#coexist"' in content
+
+    @override_settings(UNFOLD_MODAL_OVERRIDE_NATIVE=False)
+    def test_popup_page_loads_adapter_with_coexist_fragment(self, admin_client):
+        content = admin_client.get(
+            "/admin/testapp/category/add/?_popup=1"
+        ).content.decode()
+        assert f'{self.ADAPTER}#coexist"' in content
