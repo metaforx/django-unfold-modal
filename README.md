@@ -24,6 +24,9 @@ It’s fine for straightforward admin use, but when exposed to users, it often c
 [Django Unfold](https://github.com/unfoldadmin/django-unfold) greatly improves the admin’s UX for regular users.
 This package modernizes related-object interactions while following Unfold’s design principles.
 
+Since version 0.107, Unfold opens related objects in its own modal. If that is all you need, the native feature is the simpler choice.
+unfold-modal remains a more versatile solution if you want your own modals in the admin, need Django Filer support, or want all modals to follow the same pattern.
+
 ## Requirements
 
 - Python 3.10+
